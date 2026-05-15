@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --crayola: #1675f4;
+  --yale: #0b3b7a;
+  --navy: #08234a;
+  --electric: #64e9ee;
+  --spring: #40f99b;
+  --gold: #ffd700;
+  --ink: #0f1729;
+  --cloud: #fafcff;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--cloud);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "ss02", "tnum";
+}
+
+/* numerical readouts in calculators / fund cards */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Animated noise overlay used over the hero mesh */
+.noise-overlay {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    repeating-radial-gradient(circle at 20% 30%, rgba(255,255,255,0.04) 0, transparent 1px),
+    repeating-radial-gradient(circle at 70% 80%, rgba(255,255,255,0.03) 0, transparent 1px);
+  opacity: 0.6;
+  mix-blend-mode: overlay;
+}
+
+/* hex grid backdrop used as a layered decoration */
+.hex-pattern {
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='92'><path d='M40 2 L77 22 L77 70 L40 90 L3 70 L3 22 Z' fill='none' stroke='%231675F4' stroke-opacity='0.18' stroke-width='1'/></svg>");
+  background-size: 80px 92px;
+}
+
+/* Soft anchor scroll offset for sticky header */
+section[id] { scroll-margin-top: 96px; }
+
+/* Custom range sliders for calculators */
+input[type="range"].brand-slider {
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--crayola) var(--p, 50%), #e5edfb var(--p, 50%));
+  outline: none;
+}
+input[type="range"].brand-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px; height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid var(--crayola);
+  box-shadow: 0 4px 10px rgba(22,117,244,0.25);
+  cursor: pointer;
+}
+input[type="range"].brand-slider::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid var(--crayola);
+  box-shadow: 0 4px 10px rgba(22,117,244,0.25);
+  cursor: pointer;
+}
+
+/* honor reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* AMC partner-strip marquee — keyframes live here so the animation
+   works without needing a dev-server restart for tailwind.config changes. */
+@keyframes ml-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ml-marquee {
+  display: flex;
+  width: max-content;
+  animation: ml-marquee var(--marquee-duration, 40s) linear infinite;
+  will-change: transform;
+}
+.ml-marquee[data-reverse="true"] {
+  animation-direction: reverse;
+}
+.ml-marquee:hover { animation-play-state: paused; }
+
+/* Tailwind line-clamp shorthand (no plugin needed in Tailwind 3.3+) */
+.line-clamp-2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.line-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
