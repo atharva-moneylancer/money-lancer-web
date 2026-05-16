@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { SectionEyebrow } from "@/components/home/Services";
 import { Button } from "@/components/ui/Button";
-import { getCategoryTopPerformers, getCategoryPerformance, getLatestNav } from "@/lib/advisorkhoj";
+import { getCategoryTopPerformers, getCategoryPerformance } from "@/lib/advisorkhoj";
 import { AmcSlideshow } from "@/components/fund/AmcSlideshow";
 import { CategoryFilter } from "@/components/fund/CategoryFilter";
 import { FundsListClient } from "@/components/fund/FundsListClient";
@@ -113,15 +113,8 @@ export default async function FundsPage({
   let funds: any[] = [];
   try {
     if (cat === "all") {
-      const d = await getLatestNav("All", "All");
-      funds = regularOnly(d.list)
-        .slice(0, 100)
-        .map((r: any) => ({
-          scheme_amfi: r.scheme_name,
-          scheme_company: r.mf_company,
-          scheme_category: r.category,
-          price: r.net_asset_value,
-        }));
+      const d = await getCategoryTopPerformers("All", "1y");
+      funds = regularOnly(d.list).slice(0, 100);
     } else {
       const d = await getCategoryTopPerformers(cat, "1y");
       funds = regularOnly(d.list);
