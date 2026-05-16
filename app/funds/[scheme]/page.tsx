@@ -107,7 +107,7 @@ export default async function FundDetail({ params }: Params) {
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat title="Since inception" value={`${Number(info.scheme_inception_return ?? 0).toFixed(2)}%`} accent="success" sub="CAGR" />
           <Stat title="Benchmark (inception)" value={`${Number(info.benchmark_inception_return ?? 0).toFixed(2)}%`} sub="CAGR" />
-          <Stat title="Fund size" value={info.scheme_assets ? `₹${formatNumberIN(Number(info.scheme_assets) / 100, 0)} Cr` : "—"} sub="AUM" />
+          <Stat title="Fund size" value={info.scheme_assets ? `₹${formatNumberIN(Number(info.scheme_assets), 0)} Cr` : "—"} sub="AUM" />
           <Stat title="Expense ratio" value={`${Number(info.expense_ratio_percentage ?? 0).toFixed(2)}%`} sub={info.expense_ratio_date || ""} />
         </div>
 
