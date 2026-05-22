@@ -10,6 +10,7 @@ import VideoSection from "@/components/home/VideoSection";
 import { NewsSection } from "@/components/home/NewsSection";
 import FounderSpotlight from "@/components/home/FounderSpotlight";
 import { AwardSlideshow } from "@/components/home/AwardSlideshow";
+import BucketPreview from "@/components/home/BucketPreview";
 import CTA from "@/components/home/CTA";
 import { getMarketQuotes } from "@/lib/markets";
 import { getYouTubeVideos } from "@/lib/youtube";
@@ -30,6 +31,7 @@ export default async function Home() {
       <Services />
       <PartnerStrip />
       <LiveFunds />
+      <BucketPreview />
       <SipCalculator />
       <NewsSection articles={news} />
       <VideoSection videos={videos} />

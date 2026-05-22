@@ -34,3 +34,4 @@ SESSION_BRIEF.md
 __pycache__/
 *.pyc
 *.pyo
+.vercel

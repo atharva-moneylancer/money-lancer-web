@@ -153,8 +153,11 @@ export default async function FundsPage({
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button href="/funds/compare" variant="primary" size="md">
-            Compare funds →
+          <Button href="/funds/buckets" variant="primary" size="md">
+            View curated buckets →
+          </Button>
+          <Button href="/funds/compare" variant="secondary" size="md">
+            Compare funds
           </Button>
           <Button href="/risk-profiler" variant="secondary" size="md">
             Take risk profiler
