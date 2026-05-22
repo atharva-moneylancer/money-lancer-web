@@ -49,8 +49,6 @@ export default async function BucketDetailPage({
         blend3y: null,
         blend5y: null,
         weightedTer: null,
-        sharpeProxy: null,
-        sortinoProxy: null,
         maxDrawdownProxy: null,
         fundCount: 0,
       },
@@ -112,7 +110,7 @@ export default async function BucketDetailPage({
             Blended metrics based on current fund composition. Updated daily.
           </p>
 
-          <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
+          <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             <MetricCard
               label="Blended 1Y"
               value={analytics.blend1y}
@@ -135,18 +133,6 @@ export default async function BucketDetailPage({
               label="Avg TER"
               value={analytics.weightedTer}
               suffix="%"
-            />
-            <MetricCard
-              label="Sharpe Ratio"
-              value={analytics.sharpeProxy}
-              suffix=""
-              info="Excess return per unit of total risk (proxy)"
-            />
-            <MetricCard
-              label="Sortino Ratio"
-              value={analytics.sortinoProxy}
-              suffix=""
-              info="Excess return per unit of downside risk (proxy)"
             />
             <MetricCard
               label="Max Drawdown"
@@ -237,9 +223,9 @@ export default async function BucketDetailPage({
         {/* Disclaimer */}
         <div className="mt-12 rounded-xl border border-black/[0.06] bg-cloud p-6 text-xs text-slate2 leading-relaxed">
           <strong className="text-graphite">Important:</strong> This is a model portfolio for educational
-          purposes — not personalised investment advice. Analytics are computed from available
-          return data and are approximations. Sharpe and Sortino ratios shown are simplified proxies,
-          not full statistical measures. Past performance does not guarantee future results. All funds
+          purposes — not personalised investment advice. Blended returns are weighted averages
+          computed from constituent fund data and are approximations.
+          Past performance does not guarantee future results. All funds
           shown are Regular Plans. Mutual fund investments are subject to market risks — read all
           scheme-related documents carefully. ARN-175445.
         </div>

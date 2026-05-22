@@ -8,7 +8,7 @@
  *
  * At build/ISR time, `hydrateBucket()` fetches the top-performing Regular
  * plans for each slot and computes portfolio-level analytics (weighted CAGR,
- * blended TER, Sharpe-like metrics derived from available returns).
+ * blended TER, and max drawdown).
  */
 
 import {
@@ -75,10 +75,6 @@ export type PortfolioAnalytics = {
   blend5y: number | null;
   /** Weighted average TER */
   weightedTer: number | null;
-  /** Simple Sharpe-like ratio: blend3y / stdev of slot 3Y returns */
-  sharpeProxy: number | null;
-  /** Sortino-like proxy: blend3y / downside deviation of slot 3Y returns */
-  sortinoProxy: number | null;
   /** Max drawdown proxy — worst 1Y return among constituent funds */
   maxDrawdownProxy: number | null;
   /** Total number of constituent funds */
@@ -459,99 +455,21 @@ function pickTopFunds(funds: PerformanceRow[], count: number): PerformanceRow[] 
     .slice(0, count);
 }
 
-/**
- * Estimated annualized volatility (standard deviation of returns) by MF category.
- * Based on historical 5-10 year data for Indian mutual funds. These are approximate
- * mid-range values — actual fund volatility varies.
- *
- * Sources: AMFI, Value Research, Morningstar India historical data.
- */
-const CATEGORY_VOLATILITY: Record<string, number> = {
-  // Pure equity — 15-25%
-  "Equity: Large Cap": 15,
-  "Equity: Mid Cap": 20,
-  "Equity: Small Cap": 24,
-  "Equity: Flexi Cap": 16,
-  "Equity: Multi Cap": 17,
-  "Equity: ELSS": 17,
-  "Equity: Value Fund": 18,
-  "Equity: Focused Fund": 17,
-  "Equity: Dividend Yield": 15,
-  // Hybrid — 8-14%
-  "Hybrid: Aggressive": 13,
-  "Hybrid: Conservative": 6,
-  "Hybrid: Equity Savings": 7,
-  "Hybrid: Arbitrage": 2,
-  "Hybrid: Multi Asset Allocation": 10,
-  // Debt — 1-6%
-  "Debt: Short Duration": 3,
-  "Debt: Ultra Short Duration": 1.5,
-  "Debt: Liquid": 0.5,
-  "Debt: Corporate Bond": 4,
-  // FoF / International — 16-22%
-  "Fund of Funds-Overseas": 18,
-  "Fund of Funds-Gold": 14,
-};
-
-/** Fallback volatility when category isn't in the map */
-const DEFAULT_VOLATILITY = 15;
-
-/**
- * Estimate portfolio-level annualized volatility from weighted category volatilities.
- * Assumes imperfect correlation (0.6) between slots to give a modest diversification benefit.
- */
-function estimatePortfolioVolatility(slots: HydratedSlot[]): number {
-  // Weighted average of category vols (no diversification benefit = upper bound)
-  let weightedVol = 0;
-  for (const slot of slots) {
-    const catVol = CATEGORY_VOLATILITY[slot.category] ?? DEFAULT_VOLATILITY;
-    weightedVol += catVol * slot.weight;
-  }
-  // Apply a diversification discount — sqrt of weighted variance with ρ=0.6
-  // For a multi-asset portfolio, perfect correlation gives weightedVol,
-  // but real correlation is lower. Using sqrt(ρ) ≈ 0.77 as a scaling factor.
-  const diversifiedVol = weightedVol * 0.85; // ~15% diversification benefit
-  return Math.max(diversifiedVol, 0.5);
-}
-
 /** Compute portfolio-level analytics from hydrated slots */
 function computeAnalytics(slots: HydratedSlot[]): PortfolioAnalytics {
   let blend1y = 0, blend3y = 0, blend5y = 0, weightedTer = 0;
   let has1y = false, has3y = false, has5y = false, hasTer = false;
   let fundCount = 0;
-  const returns3y: number[] = [];
 
   for (const slot of slots) {
     const perFundWeight = slot.funds.length > 0 ? slot.weight / slot.funds.length : 0;
     for (const f of slot.funds) {
       fundCount++;
       if (f.returns_abs_1year != null) { blend1y += f.returns_abs_1year * perFundWeight; has1y = true; }
-      if (f.returns_cmp_3year != null) {
-        blend3y += f.returns_cmp_3year * perFundWeight;
-        has3y = true;
-        returns3y.push(f.returns_cmp_3year);
-      }
+      if (f.returns_cmp_3year != null) { blend3y += f.returns_cmp_3year * perFundWeight; has3y = true; }
       if (f.returns_cmp_5year != null) { blend5y += f.returns_cmp_5year * perFundWeight; has5y = true; }
       if (f.ter != null && f.ter > 0) { weightedTer += f.ter * perFundWeight; hasTer = true; }
     }
-  }
-
-  // Sharpe & Sortino proxies using category-based estimated annualized volatility.
-  // We can't compute real time-series volatility from trailing returns alone, so we
-  // use well-known historical volatility ranges for Indian MF categories as proxies.
-  const rf = 6; // India risk-free rate proxy (10Y G-Sec ≈ 7%, short-term T-bill ≈ 6%)
-  let sharpeProxy: number | null = null;
-  let sortinoProxy: number | null = null;
-
-  // Estimate portfolio volatility from weighted category volatilities
-  const portfolioVol = estimatePortfolioVolatility(slots);
-
-  if (has3y && portfolioVol > 0) {
-    sharpeProxy = +((blend3y - rf) / portfolioVol).toFixed(2);
-    // Sortino uses downside deviation — typically ~65-70% of total vol for equity,
-    // ~50% for debt/hybrid. Use 0.65 as a blended assumption.
-    const downsideDev = portfolioVol * 0.65;
-    if (downsideDev > 0) sortinoProxy = +((blend3y - rf) / downsideDev).toFixed(2);
   }
 
   // Max drawdown proxy — worst 1Y return
@@ -564,8 +482,6 @@ function computeAnalytics(slots: HydratedSlot[]): PortfolioAnalytics {
     blend3y: has3y ? +blend3y.toFixed(1) : null,
     blend5y: has5y ? +blend5y.toFixed(1) : null,
     weightedTer: hasTer ? +weightedTer.toFixed(2) : null,
-    sharpeProxy,
-    sortinoProxy,
     maxDrawdownProxy: maxDrawdownProxy != null ? +maxDrawdownProxy.toFixed(1) : null,
     fundCount,
   };
