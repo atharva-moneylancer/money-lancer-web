@@ -100,7 +100,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
       { name: "Invesco India Smallcap Fund", match: "Invesco India Smallcap", category: "Equity: Small Cap" },
       { name: "Edelweiss Mid Cap Fund", match: "Edelweiss Mid Cap", category: "Equity: Mid Cap" },
       { name: "WhiteOak Capital Mid Cap Fund", match: "WhiteOak Capital Mid Cap", category: "Equity: Mid Cap" },
-      { name: "HDFC Mid-Cap Opportunities Fund", match: "HDFC Mid-Cap", category: "Equity: Mid Cap" },
+      { name: "HDFC Mid Cap Opportunities Fund", match: "HDFC Mid Cap", category: "Equity: Mid Cap" },
     ],
   },
   {
@@ -138,9 +138,9 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     accent: "from-spring/20 via-transparent to-transparent",
     icon: "🏦",
     funds: [
-      { name: "Bandhan Large & Midcap Fund", match: "Bandhan Large and Midcap", category: "Equity: Large and Mid Cap" },
-      { name: "DSP Large & Midcap Fund", match: "DSP Large and Mid Cap", category: "Equity: Large and Mid Cap" },
-      { name: "Axis Large & Midcap Fund", match: "Axis Large & Mid Cap", category: "Equity: Large and Mid Cap" },
+      { name: "Bandhan Large & Mid Cap Fund", match: "Bandhan Large & Mid Cap", category: "Equity: Large and Mid Cap" },
+      { name: "DSP Large & Mid Cap Fund", match: "DSP Large & Mid Cap", category: "Equity: Large and Mid Cap" },
+      { name: "Axis Large & Mid Cap Fund", match: "Axis Large & Mid Cap", category: "Equity: Large and Mid Cap" },
     ],
   },
   {
@@ -159,8 +159,8 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     funds: [
       { name: "Edelweiss Mid Cap Fund", match: "Edelweiss Mid Cap", category: "Equity: Mid Cap" },
       { name: "WhiteOak Capital Mid Cap Fund", match: "WhiteOak Capital Mid Cap", category: "Equity: Mid Cap" },
-      { name: "HDFC Mid-Cap Opportunities Fund", match: "HDFC Mid-Cap", category: "Equity: Mid Cap" },
-      { name: "Bandhan Large & Midcap Fund", match: "Bandhan Large and Midcap", category: "Equity: Large and Mid Cap" },
+      { name: "HDFC Mid Cap Opportunities Fund", match: "HDFC Mid Cap", category: "Equity: Mid Cap" },
+      { name: "Bandhan Large & Mid Cap Fund", match: "Bandhan Large & Mid Cap", category: "Equity: Large and Mid Cap" },
     ],
   },
 
@@ -345,10 +345,10 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     accent: "from-electric/20 via-transparent to-transparent",
     icon: "🌍",
     funds: [
-      { name: "DSP Global Equity Fund", match: "DSP Global", category: "Fund of Funds-Overseas" },
-      { name: "WhiteOak Ashoka Emerging Markets Fund", match: "Ashoka", category: "Fund of Funds-Overseas" },
+      { name: "DSP Global Innovation FoF", match: "DSP Global Innovation", category: "Fund of Funds-Overseas" },
+      { name: "DSP US Specific Equity FoF", match: "DSP US Specific Equity", category: "Fund of Funds-Overseas" },
       { name: "Parag Parikh Flexi Cap Fund", match: "Parag Parikh Flexi Cap", category: "Equity: Flexi Cap" },
-      { name: "Axis Large & Midcap Fund", match: "Axis Large & Mid Cap", category: "Equity: Large and Mid Cap" },
+      { name: "Axis Large & Mid Cap Fund", match: "Axis Large & Mid Cap", category: "Equity: Large and Mid Cap" },
     ],
   },
   {
@@ -365,14 +365,12 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     accent: "from-critical/15 via-transparent to-transparent",
     icon: "🎯",
     funds: [
-      { name: "ICICI Pru India Opportunities Fund", match: "ICICI Pru India Opportunities", category: "Equity: Thematic-Others" },
+      { name: "ICICI Prudential India Opportunities Fund", match: "ICICI Prudential India Opportunities", category: "Equity: Thematic-Others" },
       { name: "Mahindra Manulife Business Cycle Fund", match: "Mahindra Manulife Business Cycle", category: "Equity: Thematic-Business-Cycle" },
       { name: "Franklin India Opportunities Fund", match: "Franklin India Opportunities", category: "Equity: Thematic-Others" },
-      { name: "ICICI Pru Thematic Advantage Fund", match: "ICICI Pru Thematic Advantage", category: "Equity: Thematic-Others" },
       { name: "Sundaram Services Fund", match: "Sundaram Services", category: "Equity: Thematic-Others" },
       { name: "Kotak Pioneer Fund", match: "Kotak Pioneer", category: "Equity: Thematic-Innovation" },
-      { name: "ITI Diviniti SIF", match: "ITI Diviniti", category: "SIF" },
-      { name: "ICICI Pru Ex Top 100 SIF", match: "Ex Top 100", category: "SIF" },
+      { name: "ICICI Prudential Conglomerate Fund", match: "ICICI Prudential Conglomerate", category: "Equity: Thematic-Others" },
     ],
   },
   {
