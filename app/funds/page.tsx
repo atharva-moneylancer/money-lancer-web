@@ -113,11 +113,30 @@ export default async function FundsPage({
   let funds: any[] = [];
   try {
     if (cat === "all") {
-      const d = await getCategoryTopPerformers("All", "1y");
-      funds = regularOnly(d.list).slice(0, 100);
+      // Fetch top performers from popular categories in parallel instead of
+      // requesting "All" which returns a 2.5 MB payload that times out on
+      // Vercel's serverless functions.
+      const popularCats = [
+        "Equity: Large Cap",
+        "Equity: Mid Cap",
+        "Equity: Small Cap",
+        "Equity: Flexi Cap",
+        "Equity: ELSS",
+        "Hybrid: Aggressive",
+        "Debt: Short Duration",
+        "Debt: Liquid",
+      ];
+      const results = await Promise.all(
+        popularCats.map((c) =>
+          getCategoryTopPerformers(c, "1y").catch(() => ({ list: [] as any[] }))
+        )
+      );
+      funds = regularOnly(results.flatMap((r) => r.list || []))
+        .sort((a: any, b: any) => (b.returns_abs_1year ?? 0) - (a.returns_abs_1year ?? 0))
+        .slice(0, 100);
     } else {
       const d = await getCategoryTopPerformers(cat, "1y");
-      funds = regularOnly(d.list);
+      funds = regularOnly(d.list || []);
     }
   } catch {}
 

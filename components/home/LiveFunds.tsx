@@ -112,8 +112,8 @@ function ReturnCell({ value }: { value?: number }) {
 }
 
 const SAMPLE_FUNDS = [
-  { code: "HDFC Top 100 Fund - Regular Plan-Growth", name: "HDFC Top 100 Fund", company: "HDFC MF", cat: "Equity: Large Cap", nav: 1268.42, r1y: 24.3, r3y: 18.7, r5y: 17.2 },
-  { code: "ICICI Prudential Bluechip Fund - Regular Plan-Growth", name: "ICICI Pru Bluechip Fund", company: "ICICI Pru MF", cat: "Equity: Large Cap", nav: 102.66, r1y: 28.5, r3y: 19.2, r5y: 18.8 },
-  { code: "SBI Bluechip Fund - Regular Plan-Growth", name: "SBI Bluechip Fund", company: "SBI MF", cat: "Equity: Large Cap", nav: 92.40, r1y: 22.1, r3y: 16.4, r5y: 16.0 },
-  { code: "Mirae Asset Large Cap Fund - Regular Plan-Growth", name: "Mirae Asset Large Cap Fund", company: "Mirae Asset MF", cat: "Equity: Large Cap", nav: 109.71, r1y: 26.8, r3y: 17.9, r5y: 18.5 },
+  { code: "HDFC Large Cap Fund - Growth Option - Regular Plan", name: "HDFC Large Cap Fund", company: "HDFCMF", cat: "Equity: Large Cap", nav: 1081.15, r1y: -3.9, r3y: 11.8, r5y: 12.3 },
+  { code: "ICICI Prudential Large Cap Fund (erstwhile Bluechip Fund)  - Growth", name: "ICICI Pru Large Cap Fund", company: "ICICIMF", cat: "Equity: Large Cap", nav: 105.71, r1y: -2.8, r3y: 14.5, r5y: 13.6 },
+  { code: "SBI Large Cap FUND-REGULAR PLAN GROWTH", name: "SBI Large Cap Fund", company: "SBIMF", cat: "Equity: Large Cap", nav: 90.71, r1y: -0.5, r3y: 11.3, r5y: 11.2 },
+  { code: "Nippon India Large Cap  Fund- Growth Plan -Growth Option", name: "Nippon India Large Cap Fund", company: "NipponIndiaMF", cat: "Equity: Large Cap", nav: 87.59, r1y: -1.0, r3y: 14.7, r5y: 15.6 },
 ];
