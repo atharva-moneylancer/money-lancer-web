@@ -1,14 +1,10 @@
 /**
  * Fund Buckets — curated portfolios assembled from live AdvisorKhoj data.
  *
- * Each bucket defines:
- *  - allocation "slots" — a category + weight + count describing which funds
- *    the server should pull when building the bucket
- *  - metadata: risk level, recommended holding period, SIP range, description
- *
- * At build/ISR time, `hydrateBucket()` fetches the top-performing Regular
- * plans for each slot and computes portfolio-level analytics (weighted CAGR,
- * blended TER, and max drawdown).
+ * Each bucket defines a flat list of specific named funds (FundSpec[]).
+ * At build/ISR time, `hydrateBucket()` fetches category data from AdvisorKhoj
+ * and matches each fund by name to pull live performance data.
+ * All funds in a bucket are equally weighted (1/N).
  */
 
 import {
@@ -29,15 +25,13 @@ export type RiskLevel =
   | "High"
   | "Very High";
 
-export type BucketSlot = {
-  /** AdvisorKhoj category string, e.g. "Equity: Large Cap" */
+export type FundSpec = {
+  /** Display name shown in UI */
+  name: string;
+  /** Substring to match against scheme_amfi in API response (case-insensitive) */
+  match: string;
+  /** AdvisorKhoj category to search within */
   category: string;
-  /** Display label for the allocation row */
-  label: string;
-  /** Portfolio weight in [0,1] — all slots for a bucket should sum to 1 */
-  weight: number;
-  /** How many top funds to pick from this category */
-  pick: number;
 };
 
 export type BucketConfig = {
@@ -53,17 +47,12 @@ export type BucketConfig = {
   sipMin: number;
   /** Max recommended monthly SIP in ₹ */
   sipMax: number;
-  /** Allocation slots that drive dynamic fund selection */
-  slots: BucketSlot[];
+  /** Specific funds in this bucket */
+  funds: FundSpec[];
   /** Accent colour class for the card gradient */
   accent: string;
   /** Icon label (emoji for now, swap for SVG later) */
   icon: string;
-};
-
-/** A hydrated slot with live fund data */
-export type HydratedSlot = BucketSlot & {
-  funds: PerformanceRow[];
 };
 
 export type PortfolioAnalytics = {
@@ -77,12 +66,13 @@ export type PortfolioAnalytics = {
   weightedTer: number | null;
   /** Max drawdown proxy — worst 1Y return among constituent funds */
   maxDrawdownProxy: number | null;
-  /** Total number of constituent funds */
+  /** Total number of constituent funds found */
   fundCount: number;
 };
 
-export type HydratedBucket = Omit<BucketConfig, "slots"> & {
-  slots: HydratedSlot[];
+export type HydratedBucket = BucketConfig & {
+  /** Live fund data matched from API */
+  hydratedFunds: PerformanceRow[];
   analytics: PortfolioAnalytics;
 };
 
@@ -97,7 +87,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "High Growth",
     tagline: "Maximum capital appreciation",
     description:
-      "An aggressive portfolio for investors with a long horizon and high risk appetite. Combines small-cap and mid-cap exposure with multi-cap diversification for maximum growth potential.",
+      "An aggressive portfolio for investors with a long horizon and high risk appetite. Combines small-cap and mid-cap exposure for maximum growth potential.",
     group: "Wealth Creation",
     riskLevel: "Very High",
     holdingPeriod: "7+ years",
@@ -105,11 +95,12 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 50000,
     accent: "from-critical/15 via-transparent to-transparent",
     icon: "🚀",
-    slots: [
-      { category: "Equity: Small Cap", label: "Small Cap", weight: 0.35, pick: 2 },
-      { category: "Equity: Mid Cap", label: "Mid Cap", weight: 0.35, pick: 2 },
-      { category: "Equity: Multi Cap", label: "Multi Cap", weight: 0.15, pick: 1 },
-      { category: "Equity: Flexi Cap", label: "Flexi Cap", weight: 0.15, pick: 1 },
+    funds: [
+      { name: "Bandhan Small Cap Fund", match: "Bandhan Small Cap", category: "Equity: Small Cap" },
+      { name: "Invesco India Smallcap Fund", match: "Invesco India Smallcap", category: "Equity: Small Cap" },
+      { name: "Edelweiss Mid Cap Fund", match: "Edelweiss Mid Cap", category: "Equity: Mid Cap" },
+      { name: "WhiteOak Capital Mid Cap Fund", match: "WhiteOak Capital Mid Cap", category: "Equity: Mid Cap" },
+      { name: "HDFC Mid-Cap Opportunities Fund", match: "HDFC Mid-Cap", category: "Equity: Mid Cap" },
     ],
   },
   {
@@ -117,7 +108,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Steady Compounder",
     tagline: "Consistent wealth creation",
     description:
-      "A core portfolio built around large-cap stability with flexi-cap and focused-fund upside. Designed for investors who want steady compounding without extreme volatility.",
+      "A core portfolio built around flexi-cap versatility and multi-cap diversification. Designed for investors who want steady compounding without extreme volatility.",
     group: "Wealth Creation",
     riskLevel: "Moderately High",
     holdingPeriod: "5+ years",
@@ -125,27 +116,31 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 100000,
     accent: "from-crayola/15 via-transparent to-transparent",
     icon: "📈",
-    slots: [
-      { category: "Equity: Large Cap", label: "Large Cap", weight: 0.55, pick: 2 },
-      { category: "Equity: Flexi Cap", label: "Flexi Cap", weight: 0.25, pick: 1 },
-      { category: "Equity: Focused Fund", label: "Focused Fund", weight: 0.20, pick: 1 },
+    funds: [
+      { name: "Bajaj Finserv Flexi Cap Fund", match: "Bajaj Finserv Flexi Cap", category: "Equity: Flexi Cap" },
+      { name: "WhiteOak Capital Flexi Cap Fund", match: "WhiteOak Capital Flexi Cap", category: "Equity: Flexi Cap" },
+      { name: "Parag Parikh Flexi Cap Fund", match: "Parag Parikh Flexi Cap", category: "Equity: Flexi Cap" },
+      { name: "Kotak Multicap Fund", match: "Kotak Multicap", category: "Equity: Multi Cap" },
+      { name: "Axis Multicap Fund", match: "Axis Multicap", category: "Equity: Multi Cap" },
     ],
   },
   {
-    slug: "tax-saver-elss",
-    name: "Tax Saver (ELSS)",
-    tagline: "Save tax, grow wealth",
+    slug: "core-allocation",
+    name: "Core Allocation",
+    tagline: "Core allocation",
     description:
-      "The only mutual fund category that offers Section 80C tax deductions with a 3-year lock-in. Triple benefit — tax saving, equity growth, and the shortest lock-in among 80C instruments.",
+      "A focused large & mid-cap portfolio offering the stability of blue-chips with the growth potential of quality mid-caps. Ideal as a core equity holding.",
     group: "Wealth Creation",
     riskLevel: "High",
-    holdingPeriod: "3+ years (lock-in)",
-    sipMin: 500,
-    sipMax: 12500,
+    holdingPeriod: "5+ years",
+    sipMin: 5000,
+    sipMax: 50000,
     accent: "from-spring/20 via-transparent to-transparent",
     icon: "🏦",
-    slots: [
-      { category: "Equity: ELSS", label: "ELSS", weight: 1.0, pick: 3 },
+    funds: [
+      { name: "Bandhan Large & Midcap Fund", match: "Bandhan Large and Midcap", category: "Equity: Large and Mid Cap" },
+      { name: "DSP Large & Midcap Fund", match: "DSP Large and Mid Cap", category: "Equity: Large and Mid Cap" },
+      { name: "Axis Large & Midcap Fund", match: "Axis Large & Mid Cap", category: "Equity: Large and Mid Cap" },
     ],
   },
   {
@@ -153,7 +148,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Mid Cap Momentum",
     tagline: "Ride the mid-cap wave",
     description:
-      "A concentrated mid-cap bet for investors who believe in the structural growth story of India's mid-sized companies. Higher volatility, higher potential.",
+      "A concentrated mid-cap and large & mid-cap bet for investors who believe in the structural growth story of India's mid-sized companies. Higher volatility, higher potential.",
     group: "Wealth Creation",
     riskLevel: "Very High",
     holdingPeriod: "5+ years",
@@ -161,8 +156,11 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 30000,
     accent: "from-electric/20 via-transparent to-transparent",
     icon: "⚡",
-    slots: [
-      { category: "Equity: Mid Cap", label: "Mid Cap", weight: 1.0, pick: 4 },
+    funds: [
+      { name: "Edelweiss Mid Cap Fund", match: "Edelweiss Mid Cap", category: "Equity: Mid Cap" },
+      { name: "WhiteOak Capital Mid Cap Fund", match: "WhiteOak Capital Mid Cap", category: "Equity: Mid Cap" },
+      { name: "HDFC Mid-Cap Opportunities Fund", match: "HDFC Mid-Cap", category: "Equity: Mid Cap" },
+      { name: "Bandhan Large & Midcap Fund", match: "Bandhan Large and Midcap", category: "Equity: Large and Mid Cap" },
     ],
   },
 
@@ -172,7 +170,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Retirement Builder",
     tagline: "Build your retirement corpus",
     description:
-      "A diversified long-term portfolio that balances growth with gradual de-risking. Equity-heavy for accumulation years with a debt and hybrid cushion to smooth returns.",
+      "A diversified long-term portfolio combining retirement-specific funds with equity and hybrid exposure. Designed for accumulation years with gradual de-risking.",
     group: "Goal-Based",
     riskLevel: "Moderately High",
     holdingPeriod: "10+ years",
@@ -180,13 +178,13 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 100000,
     accent: "from-yale/10 via-transparent to-transparent",
     icon: "🏖️",
-    slots: [
-      { category: "Equity: Large Cap", label: "Large Cap", weight: 0.30, pick: 1 },
-      { category: "Equity: Flexi Cap", label: "Flexi Cap", weight: 0.20, pick: 1 },
-      { category: "Equity: Mid Cap", label: "Mid Cap", weight: 0.15, pick: 1 },
-      { category: "Hybrid: Aggressive", label: "Aggressive Hybrid", weight: 0.15, pick: 1 },
-      { category: "Debt: Short Duration", label: "Short Duration Debt", weight: 0.10, pick: 1 },
-      { category: "Hybrid: Multi Asset Allocation", label: "Multi Asset", weight: 0.10, pick: 1 },
+    funds: [
+      { name: "HDFC Retirement Savings Fund", match: "HDFC Retirement Savings", category: "Retirement Fund" },
+      { name: "ICICI Pru Equity & Debt Fund", match: "ICICI Prudential Equity & Debt", category: "Hybrid: Aggressive" },
+      { name: "Edelweiss Aggressive Hybrid Fund", match: "Edelweiss Aggressive Hybrid", category: "Hybrid: Aggressive" },
+      { name: "Bank of India Mid & Small Cap Equity & Debt Fund", match: "Bank of India Mid & Small Cap", category: "Hybrid: Aggressive" },
+      { name: "Parag Parikh Flexi Cap Fund", match: "Parag Parikh Flexi Cap", category: "Equity: Flexi Cap" },
+      { name: "Nippon India Multi Cap Fund", match: "Nippon India Multi Cap", category: "Equity: Multi Cap" },
     ],
   },
   {
@@ -194,7 +192,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Child's Future",
     tagline: "Invest in their dreams",
     description:
-      "A goal-oriented portfolio for your child's education or career — starts equity-heavy for growth and includes hybrid/debt stabilisers for the final years before the goal.",
+      "A goal-oriented portfolio for your child's education or career — combines children's-specific funds with hybrid and multi-asset strategies for balanced growth.",
     group: "Goal-Based",
     riskLevel: "Moderately High",
     holdingPeriod: "10+ years",
@@ -202,12 +200,12 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 50000,
     accent: "from-electric/15 via-transparent to-transparent",
     icon: "👶",
-    slots: [
-      { category: "Equity: Multi Cap", label: "Multi Cap", weight: 0.25, pick: 1 },
-      { category: "Equity: Large Cap", label: "Large Cap", weight: 0.25, pick: 1 },
-      { category: "Equity: Small Cap", label: "Small Cap", weight: 0.15, pick: 1 },
-      { category: "Hybrid: Aggressive", label: "Aggressive Hybrid", weight: 0.20, pick: 1 },
-      { category: "Debt: Short Duration", label: "Short Duration Debt", weight: 0.15, pick: 1 },
+    funds: [
+      { name: "HDFC Children's Fund", match: "HDFC Childrens", category: "Childrens Fund" },
+      { name: "SBI Children's Fund", match: "SBI Childrens", category: "Childrens Fund" },
+      { name: "ICICI Pru Equity & Debt Fund", match: "ICICI Prudential Equity & Debt", category: "Hybrid: Aggressive" },
+      { name: "Kotak Multi Asset Allocation Fund", match: "Kotak Multi Asset", category: "Hybrid: Multi Asset Allocation" },
+      { name: "DSP Multi Asset Allocation Fund", match: "DSP Multi Asset", category: "Hybrid: Multi Asset Allocation" },
     ],
   },
   {
@@ -215,7 +213,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "First Home Fund",
     tagline: "Save for your down payment",
     description:
-      "A medium-term portfolio designed for a 3-5 year home down-payment goal. Balances equity upside through hybrid funds with debt stability for capital protection as your goal nears.",
+      "A medium-term portfolio designed for a 3-5 year home down-payment goal. Multi-asset and equity savings funds balance growth with capital protection.",
     group: "Goal-Based",
     riskLevel: "Moderate",
     holdingPeriod: "3–5 years",
@@ -223,11 +221,11 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 50000,
     accent: "from-gold/15 via-transparent to-transparent",
     icon: "🏠",
-    slots: [
-      { category: "Hybrid: Aggressive", label: "Aggressive Hybrid", weight: 0.30, pick: 1 },
-      { category: "Hybrid: Equity Savings", label: "Equity Savings", weight: 0.25, pick: 1 },
-      { category: "Debt: Short Duration", label: "Short Duration Debt", weight: 0.25, pick: 1 },
-      { category: "Debt: Ultra Short Duration", label: "Ultra Short Duration", weight: 0.20, pick: 1 },
+    funds: [
+      { name: "Kotak Multi Asset Allocation Fund", match: "Kotak Multi Asset", category: "Hybrid: Multi Asset Allocation" },
+      { name: "DSP Multi Asset Allocation Fund", match: "DSP Multi Asset", category: "Hybrid: Multi Asset Allocation" },
+      { name: "Nippon India Multi Asset Allocation Fund", match: "Nippon India Multi Asset", category: "Hybrid: Multi Asset Allocation" },
+      { name: "ICICI Pru Equity Savings Fund", match: "ICICI Prudential Equity Savings", category: "Hybrid: Equity Savings" },
     ],
   },
   {
@@ -235,7 +233,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Dream Goal Fund",
     tagline: "For goals 1–3 years away",
     description:
-      "A conservative short-term portfolio for near-term goals — a vacation, wedding, or big purchase. Prioritises capital safety with modest equity exposure through hybrid funds.",
+      "A conservative short-term portfolio for near-term goals — a vacation, wedding, or big purchase. Prioritises capital safety with modest equity exposure.",
     group: "Goal-Based",
     riskLevel: "Low to Moderate",
     holdingPeriod: "1–3 years",
@@ -243,11 +241,11 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 100000,
     accent: "from-spring/15 via-transparent to-transparent",
     icon: "✨",
-    slots: [
-      { category: "Hybrid: Equity Savings", label: "Equity Savings", weight: 0.30, pick: 1 },
-      { category: "Hybrid: Conservative", label: "Conservative Hybrid", weight: 0.30, pick: 1 },
-      { category: "Debt: Short Duration", label: "Short Duration Debt", weight: 0.25, pick: 1 },
-      { category: "Debt: Ultra Short Duration", label: "Ultra Short Duration", weight: 0.15, pick: 1 },
+    funds: [
+      { name: "ICICI Pru Equity Savings Fund", match: "ICICI Prudential Equity Savings", category: "Hybrid: Equity Savings" },
+      { name: "ICICI Pru Ultra Short Term Fund", match: "ICICI Prudential Ultra Short", category: "Debt: Ultra Short Duration" },
+      { name: "Edelweiss Aggressive Hybrid Fund", match: "Edelweiss Aggressive Hybrid", category: "Hybrid: Aggressive" },
+      { name: "DSP Multi Asset Allocation Fund", match: "DSP Multi Asset", category: "Hybrid: Multi Asset Allocation" },
     ],
   },
 
@@ -257,7 +255,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Conservative Income",
     tagline: "Stability with modest income",
     description:
-      "A low-risk portfolio for capital preservation with incremental income. Ideal for investors who want better-than-FD returns without meaningful equity risk.",
+      "A low-risk portfolio for capital preservation with incremental income. Combines equity savings, ultra-short debt, and hybrid funds for better-than-FD returns.",
     group: "Conservative & Income",
     riskLevel: "Low to Moderate",
     holdingPeriod: "1–3 years",
@@ -265,10 +263,11 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 500000,
     accent: "from-spring/15 via-transparent to-transparent",
     icon: "🛡️",
-    slots: [
-      { category: "Hybrid: Conservative", label: "Conservative Hybrid", weight: 0.35, pick: 1 },
-      { category: "Debt: Corporate Bond", label: "Corporate Bond", weight: 0.35, pick: 2 },
-      { category: "Hybrid: Arbitrage", label: "Arbitrage", weight: 0.30, pick: 1 },
+    funds: [
+      { name: "ICICI Pru Equity Savings Fund", match: "ICICI Prudential Equity Savings", category: "Hybrid: Equity Savings" },
+      { name: "ICICI Pru Ultra Short Term Fund", match: "ICICI Prudential Ultra Short", category: "Debt: Ultra Short Duration" },
+      { name: "Bandhan Aggressive Hybrid Fund", match: "Bandhan Aggressive Hybrid", category: "Hybrid: Aggressive" },
+      { name: "Kotak Multi Asset Allocation Fund", match: "Kotak Multi Asset", category: "Hybrid: Multi Asset Allocation" },
     ],
   },
   {
@@ -276,7 +275,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Monthly Income (SWP)",
     tagline: "Regular cash flow via SWP",
     description:
-      "Designed for systematic withdrawal — invest a lump sum and withdraw monthly via SWP. The portfolio grows in the background while you draw a regular income.",
+      "Designed for systematic withdrawal — invest a lump sum and withdraw monthly via SWP. Aggressive hybrid and multi-asset funds grow in the background while you draw regular income.",
     group: "Conservative & Income",
     riskLevel: "Moderate",
     holdingPeriod: "3+ years",
@@ -284,11 +283,11 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 500000,
     accent: "from-gold/15 via-transparent to-transparent",
     icon: "💰",
-    slots: [
-      { category: "Hybrid: Aggressive", label: "Aggressive Hybrid", weight: 0.30, pick: 1 },
-      { category: "Hybrid: Conservative", label: "Conservative Hybrid", weight: 0.25, pick: 1 },
-      { category: "Debt: Corporate Bond", label: "Corporate Bond", weight: 0.25, pick: 1 },
-      { category: "Hybrid: Arbitrage", label: "Arbitrage", weight: 0.20, pick: 1 },
+    funds: [
+      { name: "ICICI Pru Equity & Debt Fund", match: "ICICI Prudential Equity & Debt", category: "Hybrid: Aggressive" },
+      { name: "Edelweiss Aggressive Hybrid Fund", match: "Edelweiss Aggressive Hybrid", category: "Hybrid: Aggressive" },
+      { name: "Kotak Multi Asset Allocation Fund", match: "Kotak Multi Asset", category: "Hybrid: Multi Asset Allocation" },
+      { name: "DSP Multi Asset Allocation Fund", match: "DSP Multi Asset", category: "Hybrid: Multi Asset Allocation" },
     ],
   },
   {
@@ -296,7 +295,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Liquid Parking",
     tagline: "Park idle cash smartly",
     description:
-      "For surplus cash that needs to be deployed within days to weeks. Near-zero volatility with overnight-to-ultra-short debt funds — better than a savings account.",
+      "For surplus cash that needs to be deployed within days to weeks. Ultra-short debt and multi-asset funds for near-zero volatility — better than a savings account.",
     group: "Conservative & Income",
     riskLevel: "Low",
     holdingPeriod: "1 day – 3 months",
@@ -304,9 +303,10 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 1000000,
     accent: "from-crayola/10 via-transparent to-transparent",
     icon: "🏧",
-    slots: [
-      { category: "Debt: Liquid", label: "Liquid", weight: 0.60, pick: 2 },
-      { category: "Debt: Ultra Short Duration", label: "Ultra Short Duration", weight: 0.40, pick: 1 },
+    funds: [
+      { name: "ICICI Pru Ultra Short Term Fund", match: "ICICI Prudential Ultra Short", category: "Debt: Ultra Short Duration" },
+      { name: "Nippon India Multi Asset Allocation Fund", match: "Nippon India Multi Asset", category: "Hybrid: Multi Asset Allocation" },
+      { name: "Kotak Multi Asset Allocation Fund", match: "Kotak Multi Asset", category: "Hybrid: Multi Asset Allocation" },
     ],
   },
   {
@@ -314,7 +314,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Senior Citizen Stable",
     tagline: "Safety-first for retirees",
     description:
-      "A defensive portfolio for retirees prioritising capital safety and predictable income. Minimal equity exposure, high-quality debt, and arbitrage for tax efficiency.",
+      "A defensive portfolio for retirees prioritising capital safety and predictable income. Equity savings and retirement funds with multi-asset cushioning.",
     group: "Conservative & Income",
     riskLevel: "Low to Moderate",
     holdingPeriod: "1–3 years",
@@ -322,10 +322,11 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 200000,
     accent: "from-yale/10 via-transparent to-transparent",
     icon: "🧓",
-    slots: [
-      { category: "Debt: Short Duration", label: "Short Duration Debt", weight: 0.35, pick: 2 },
-      { category: "Hybrid: Conservative", label: "Conservative Hybrid", weight: 0.35, pick: 1 },
-      { category: "Hybrid: Arbitrage", label: "Arbitrage", weight: 0.30, pick: 1 },
+    funds: [
+      { name: "ICICI Pru Equity Savings Fund", match: "ICICI Prudential Equity Savings", category: "Hybrid: Equity Savings" },
+      { name: "HDFC Retirement Savings Fund", match: "HDFC Retirement Savings", category: "Retirement Fund" },
+      { name: "Bandhan Aggressive Hybrid Fund", match: "Bandhan Aggressive Hybrid", category: "Hybrid: Aggressive" },
+      { name: "Nippon India Multi Asset Allocation Fund", match: "Nippon India Multi Asset", category: "Hybrid: Multi Asset Allocation" },
     ],
   },
 
@@ -335,7 +336,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Global Diversifier",
     tagline: "Go beyond India",
     description:
-      "Diversify outside the Indian market with international fund-of-funds. Access US, global, and emerging market equities through rupee-denominated vehicles.",
+      "Diversify outside the Indian market with international fund-of-funds and globally diversified flexi-cap strategies. Access global equities through rupee-denominated vehicles.",
     group: "Thematic & Satellite",
     riskLevel: "High",
     holdingPeriod: "5+ years",
@@ -343,16 +344,19 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 25000,
     accent: "from-electric/20 via-transparent to-transparent",
     icon: "🌍",
-    slots: [
-      { category: "Fund of Funds-Overseas", label: "International FoF", weight: 1.0, pick: 4 },
+    funds: [
+      { name: "DSP Global Equity Fund", match: "DSP Global", category: "Fund of Funds-Overseas" },
+      { name: "WhiteOak Ashoka Emerging Markets Fund", match: "Ashoka", category: "Fund of Funds-Overseas" },
+      { name: "Parag Parikh Flexi Cap Fund", match: "Parag Parikh Flexi Cap", category: "Equity: Flexi Cap" },
+      { name: "Axis Large & Midcap Fund", match: "Axis Large & Mid Cap", category: "Equity: Large and Mid Cap" },
     ],
   },
   {
-    slug: "top-3-themes",
-    name: "Top 3 Themes",
-    tagline: "Ride the hottest sectors",
+    slug: "strong-alpha-funds",
+    name: "Strong Alpha Funds",
+    tagline: "Thematic and strategic exposure",
     description:
-      "A tactical satellite allocation picking the top-performing thematic, sectoral, and value funds. Rotates quarterly based on momentum — not a buy-and-forget bucket.",
+      "A tactical satellite allocation picking high-conviction thematic, business cycle, and innovation funds. For investors seeking alpha beyond core holdings.",
     group: "Thematic & Satellite",
     riskLevel: "Very High",
     holdingPeriod: "3+ years",
@@ -360,10 +364,15 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 30000,
     accent: "from-critical/15 via-transparent to-transparent",
     icon: "🎯",
-    slots: [
-      { category: "Equity: Value Fund", label: "Value / Contra", weight: 0.34, pick: 1 },
-      { category: "Equity: Dividend Yield", label: "Dividend Yield", weight: 0.33, pick: 1 },
-      { category: "Equity: Focused Fund", label: "Focused Fund", weight: 0.33, pick: 1 },
+    funds: [
+      { name: "ICICI Pru India Opportunities Fund", match: "ICICI Pru India Opportunities", category: "Equity: Thematic-Others" },
+      { name: "Mahindra Manulife Business Cycle Fund", match: "Mahindra Manulife Business Cycle", category: "Equity: Thematic-Business-Cycle" },
+      { name: "Franklin India Opportunities Fund", match: "Franklin India Opportunities", category: "Equity: Thematic-Others" },
+      { name: "ICICI Pru Thematic Advantage Fund", match: "ICICI Pru Thematic Advantage", category: "Equity: Thematic-Others" },
+      { name: "Sundaram Services Fund", match: "Sundaram Services", category: "Equity: Thematic-Others" },
+      { name: "Kotak Pioneer Fund", match: "Kotak Pioneer", category: "Equity: Thematic-Innovation" },
+      { name: "ITI Diviniti SIF", match: "ITI Diviniti", category: "SIF" },
+      { name: "ICICI Pru Ex Top 100 SIF", match: "Ex Top 100", category: "SIF" },
     ],
   },
   {
@@ -379,12 +388,12 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 50000,
     accent: "from-gold/15 via-transparent to-transparent",
     icon: "🌦️",
-    slots: [
-      { category: "Hybrid: Multi Asset Allocation", label: "Multi Asset", weight: 0.25, pick: 1 },
-      { category: "Equity: Large Cap", label: "Large Cap", weight: 0.20, pick: 1 },
-      { category: "Hybrid: Aggressive", label: "Aggressive Hybrid", weight: 0.20, pick: 1 },
-      { category: "Debt: Short Duration", label: "Short Duration Debt", weight: 0.15, pick: 1 },
-      { category: "Hybrid: Arbitrage", label: "Arbitrage", weight: 0.20, pick: 1 },
+    funds: [
+      { name: "Kotak Multi Asset Allocation Fund", match: "Kotak Multi Asset", category: "Hybrid: Multi Asset Allocation" },
+      { name: "DSP Multi Asset Allocation Fund", match: "DSP Multi Asset", category: "Hybrid: Multi Asset Allocation" },
+      { name: "Nippon India Multi Asset Allocation Fund", match: "Nippon India Multi Asset", category: "Hybrid: Multi Asset Allocation" },
+      { name: "ICICI Pru Equity & Debt Fund", match: "ICICI Prudential Equity & Debt", category: "Hybrid: Aggressive" },
+      { name: "Parag Parikh Flexi Cap Fund", match: "Parag Parikh Flexi Cap", category: "Equity: Flexi Cap" },
     ],
   },
   {
@@ -392,7 +401,7 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     name: "Gold & Commodities Hedge",
     tagline: "Hedge against inflation",
     description:
-      "An inflation hedge through gold and multi-asset funds with commodity exposure. Acts as portfolio insurance — tends to rise when equities and bonds fall.",
+      "An inflation hedge through gold and gold-silver ETF fund-of-funds. Acts as portfolio insurance — tends to rise when equities and bonds fall.",
     group: "Thematic & Satellite",
     riskLevel: "Moderately High",
     holdingPeriod: "3+ years",
@@ -400,9 +409,9 @@ export const BUCKET_CONFIGS: BucketConfig[] = [
     sipMax: 20000,
     accent: "from-gold/20 via-transparent to-transparent",
     icon: "🥇",
-    slots: [
-      { category: "Fund of Funds-Gold", label: "Gold FoF", weight: 0.50, pick: 2 },
-      { category: "Hybrid: Multi Asset Allocation", label: "Multi Asset", weight: 0.50, pick: 1 },
+    funds: [
+      { name: "Edelweiss Gold & Silver ETF FoF", match: "Edelweiss Gold and Silver", category: "Fund of Funds-Domestic-Gold and Silver" },
+      { name: "Kotak Gold Fund", match: "Kotak Gold Fund", category: "Fund of Funds-Domestic-Gold" },
     ],
   },
 ];
@@ -446,36 +455,35 @@ async function fetchCategoryFunds(category: string): Promise<PerformanceRow[]> {
 }
 
 /**
- * Pick the top N funds by 3Y CAGR (falling back to 1Y) for a category.
- * If fewer than N are available, returns what's there.
+ * Find a specific fund by name within a category's fund list.
+ * Uses case-insensitive substring matching.
  */
-function pickTopFunds(funds: PerformanceRow[], count: number): PerformanceRow[] {
-  return [...funds]
-    .sort((a, b) => (b.returns_cmp_3year ?? b.returns_abs_1year ?? 0) - (a.returns_cmp_3year ?? a.returns_abs_1year ?? 0))
-    .slice(0, count);
+function findFundByName(funds: PerformanceRow[], match: string): PerformanceRow | undefined {
+  const needle = match.toLowerCase();
+  return funds.find((f) => (f.scheme_amfi || "").toLowerCase().includes(needle));
 }
 
-/** Compute portfolio-level analytics from hydrated slots */
-function computeAnalytics(slots: HydratedSlot[]): PortfolioAnalytics {
+/** Compute portfolio-level analytics from equally-weighted funds */
+function computeAnalytics(funds: PerformanceRow[]): PortfolioAnalytics {
+  const n = funds.length;
+  if (n === 0) {
+    return { blend1y: null, blend3y: null, blend5y: null, weightedTer: null, maxDrawdownProxy: null, fundCount: 0 };
+  }
+
+  const w = 1 / n; // equal weight
   let blend1y = 0, blend3y = 0, blend5y = 0, weightedTer = 0;
   let has1y = false, has3y = false, has5y = false, hasTer = false;
-  let fundCount = 0;
 
-  for (const slot of slots) {
-    const perFundWeight = slot.funds.length > 0 ? slot.weight / slot.funds.length : 0;
-    for (const f of slot.funds) {
-      fundCount++;
-      if (f.returns_abs_1year != null) { blend1y += f.returns_abs_1year * perFundWeight; has1y = true; }
-      if (f.returns_cmp_3year != null) { blend3y += f.returns_cmp_3year * perFundWeight; has3y = true; }
-      if (f.returns_cmp_5year != null) { blend5y += f.returns_cmp_5year * perFundWeight; has5y = true; }
-      if (f.ter != null && f.ter > 0) { weightedTer += f.ter * perFundWeight; hasTer = true; }
-    }
+  for (const f of funds) {
+    if (f.returns_abs_1year != null) { blend1y += f.returns_abs_1year * w; has1y = true; }
+    if (f.returns_cmp_3year != null) { blend3y += f.returns_cmp_3year * w; has3y = true; }
+    if (f.returns_cmp_5year != null) { blend5y += f.returns_cmp_5year * w; has5y = true; }
+    if (f.ter != null && f.ter > 0) { weightedTer += f.ter * w; hasTer = true; }
   }
 
   // Max drawdown proxy — worst 1Y return
-  let maxDrawdownProxy: number | null = null;
-  const all1y = slots.flatMap((s) => s.funds.map((f) => f.returns_abs_1year).filter((v): v is number => v != null));
-  if (all1y.length > 0) maxDrawdownProxy = Math.min(...all1y);
+  const all1y = funds.map((f) => f.returns_abs_1year).filter((v): v is number => v != null);
+  const maxDrawdownProxy = all1y.length > 0 ? Math.min(...all1y) : null;
 
   return {
     blend1y: has1y ? +blend1y.toFixed(1) : null,
@@ -483,27 +491,32 @@ function computeAnalytics(slots: HydratedSlot[]): PortfolioAnalytics {
     blend5y: has5y ? +blend5y.toFixed(1) : null,
     weightedTer: hasTer ? +weightedTer.toFixed(2) : null,
     maxDrawdownProxy: maxDrawdownProxy != null ? +maxDrawdownProxy.toFixed(1) : null,
-    fundCount,
+    fundCount: n,
   };
 }
 
 /** Hydrate a single bucket with live data */
 export async function hydrateBucket(config: BucketConfig): Promise<HydratedBucket> {
-  // Fetch all unique categories in parallel
-  const uniqueCats = [...new Set(config.slots.map((s) => s.category))];
+  // Collect all unique categories needed for this bucket
+  const uniqueCats = [...new Set(config.funds.map((f) => f.category))];
+
+  // Fetch all categories in parallel
   await Promise.all(uniqueCats.map(fetchCategoryFunds));
 
-  const hydratedSlots: HydratedSlot[] = await Promise.all(
-    config.slots.map(async (slot) => {
-      const catFunds = await fetchCategoryFunds(slot.category);
-      const picked = pickTopFunds(catFunds, slot.pick);
-      return { ...slot, funds: picked };
-    })
-  );
+  // Match each fund spec to a real fund from the API
+  const matched: PerformanceRow[] = [];
+  for (const spec of config.funds) {
+    const catFunds = await fetchCategoryFunds(spec.category);
+    const found = findFundByName(catFunds, spec.match);
+    if (found) {
+      matched.push(found);
+    }
+    // If not found, skip silently — the fund count will reflect actual matches
+  }
 
-  const analytics = computeAnalytics(hydratedSlots);
+  const analytics = computeAnalytics(matched);
 
-  return { ...config, slots: hydratedSlots, analytics };
+  return { ...config, hydratedFunds: matched, analytics };
 }
 
 /** Hydrate all buckets (for the index page) */

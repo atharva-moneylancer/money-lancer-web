@@ -10,8 +10,8 @@ import {
   getBucketBySlug,
   hydrateBucket,
   HydratedBucket,
-  HydratedSlot,
 } from "@/lib/buckets";
+import { PerformanceRow } from "@/lib/advisorkhoj";
 
 export const revalidate = 21600;
 
@@ -43,7 +43,7 @@ export default async function BucketDetailPage({
     // Show the page with empty fund data if API fails
     bucket = {
       ...config,
-      slots: config.slots.map((s) => ({ ...s, funds: [] as HydratedSlot["funds"] })) as HydratedSlot[],
+      hydratedFunds: [],
       analytics: {
         blend1y: null,
         blend3y: null,
@@ -56,7 +56,6 @@ export default async function BucketDetailPage({
   }
 
   const { analytics } = bucket;
-  const totalFunds = bucket.slots.reduce((s, sl) => s + sl.funds.length, 0);
 
   return (
     <div className="bg-mesh-soft pt-28 pb-24">
@@ -98,7 +97,7 @@ export default async function BucketDetailPage({
                 label="SIP Range"
                 value={`₹${formatNumberIN(config.sipMin)} – ₹${formatNumberIN(config.sipMax)}`}
               />
-              <QuickStat label="Funds" value={String(totalFunds)} />
+              <QuickStat label="Funds" value={String(config.funds.length)} />
             </div>
           </div>
         </div>
@@ -107,7 +106,7 @@ export default async function BucketDetailPage({
         <div className="mt-10">
           <h2 className="text-title-m font-bold text-yale">Portfolio Analytics</h2>
           <p className="mt-1 text-sm text-slate2">
-            Blended metrics based on current fund composition. Updated daily.
+            Blended metrics based on equal-weight fund composition. Updated daily.
           </p>
 
           <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -149,50 +148,37 @@ export default async function BucketDetailPage({
           <RiskMeter value={config.riskLevel} />
         </div>
 
-        {/* Allocation breakdown */}
+        {/* Fund composition */}
         <div className="mt-12">
-          <h2 className="text-title-m font-bold text-yale">Allocation Breakdown</h2>
+          <h2 className="text-title-m font-bold text-yale">Fund Composition</h2>
           <p className="mt-1 text-sm text-slate2">
-            Weight distribution across fund categories.
+            {config.funds.length} funds, equally weighted ({(100 / config.funds.length).toFixed(1)}% each).
           </p>
 
-          {/* Allocation bar */}
-          <div className="mt-5 flex h-4 overflow-hidden rounded-full">
-            {bucket.slots.map((slot, i) => (
-              <div
-                key={slot.label}
-                className="relative transition-all"
-                style={{
-                  width: `${slot.weight * 100}%`,
-                  backgroundColor: SLOT_COLORS[i % SLOT_COLORS.length],
-                }}
-                title={`${slot.label}: ${(slot.weight * 100).toFixed(0)}%`}
-              />
-            ))}
-          </div>
-
-          {/* Legend */}
-          <div className="mt-3 flex flex-wrap gap-4">
-            {bucket.slots.map((slot, i) => (
-              <div key={slot.label} className="flex items-center gap-2 text-sm">
-                <div
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: SLOT_COLORS[i % SLOT_COLORS.length] }}
-                />
-                <span className="text-graphite font-medium">{slot.label}</span>
-                <span className="text-slate2">{(slot.weight * 100).toFixed(0)}%</span>
+          {bucket.hydratedFunds.length === 0 ? (
+            <div className="mt-5 rounded-xl border border-black/[0.06] bg-white p-6">
+              <p className="text-sm text-slate2">
+                Fund data temporarily unavailable. Please check back later.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-5 overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-soft">
+              {/* Table header */}
+              <div className="grid grid-cols-12 gap-3 border-b border-black/5 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate2">
+                <div className="col-span-5">Scheme</div>
+                <div className="col-span-2 text-right">NAV</div>
+                <div className="col-span-1 text-right">1Y</div>
+                <div className="col-span-1 text-right">3Y</div>
+                <div className="col-span-1 text-right">5Y</div>
+                <div className="col-span-2 text-right">TER</div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Fund composition — per slot */}
-        <div className="mt-12 space-y-8">
-          <h2 className="text-title-m font-bold text-yale">Fund Composition</h2>
-
-          {bucket.slots.map((slot, slotIdx) => (
-            <SlotSection key={slot.label} slot={slot} colorIdx={slotIdx} />
-          ))}
+              {/* Fund rows */}
+              {bucket.hydratedFunds.map((f) => (
+                <FundRow key={f.scheme_amfi} fund={f} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* CTA */}
@@ -223,7 +209,7 @@ export default async function BucketDetailPage({
         {/* Disclaimer */}
         <div className="mt-12 rounded-xl border border-black/[0.06] bg-cloud p-6 text-xs text-slate2 leading-relaxed">
           <strong className="text-graphite">Important:</strong> This is a model portfolio for educational
-          purposes — not personalised investment advice. Blended returns are weighted averages
+          purposes — not personalised investment advice. Blended returns are equal-weight averages
           computed from constituent fund data and are approximations.
           Past performance does not guarantee future results. All funds
           shown are Regular Plans. Mutual fund investments are subject to market risks — read all
@@ -237,16 +223,6 @@ export default async function BucketDetailPage({
 // ────────────────────────────────────────────────────────────────────────────
 // Sub-components
 // ────────────────────────────────────────────────────────────────────────────
-
-const SLOT_COLORS = [
-  "#1675F4", // crayola
-  "#64E9EE", // electric
-  "#0B3B7A", // yale
-  "#40F99B", // spring
-  "#FFD700", // gold
-  "#CC6666", // critical
-  "#31783E", // success
-];
 
 function QuickStat({ label, value }: { label: string; value: string }) {
   return (
@@ -291,93 +267,38 @@ function MetricCard({
   );
 }
 
-function SlotSection({ slot, colorIdx }: { slot: HydratedSlot; colorIdx: number }) {
-  if (slot.funds.length === 0) {
-    return (
-      <div className="rounded-xl border border-black/[0.06] bg-white p-6">
-        <div className="flex items-center gap-3 mb-3">
-          <div
-            className="h-3 w-3 rounded-full"
-            style={{ backgroundColor: SLOT_COLORS[colorIdx % SLOT_COLORS.length] }}
-          />
-          <h3 className="text-title-s font-semibold text-ink">
-            {slot.label}{" "}
-            <span className="text-slate2 font-normal">
-              ({(slot.weight * 100).toFixed(0)}%)
-            </span>
-          </h3>
-        </div>
-        <p className="text-sm text-slate2">
-          Fund data temporarily unavailable. Please check back later.
-        </p>
-      </div>
-    );
-  }
-
+function FundRow({ fund: f }: { fund: PerformanceRow }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-soft">
-      {/* Slot header */}
-      <div className="flex items-center gap-3 border-b border-black/5 bg-cloud px-6 py-4">
-        <div
-          className="h-3 w-3 rounded-full"
-          style={{ backgroundColor: SLOT_COLORS[colorIdx % SLOT_COLORS.length] }}
-        />
-        <h3 className="text-sm font-semibold text-ink">
-          {slot.label}
-        </h3>
-        <span className="rounded-full bg-crayola/10 px-2 py-0.5 text-[10px] font-semibold text-crayola">
-          {(slot.weight * 100).toFixed(0)}% allocation
-        </span>
-        <span className="text-xs text-slate2">
-          Top {slot.pick} fund{slot.pick > 1 ? "s" : ""} by 3Y CAGR
-        </span>
+    <Link
+      href={`/funds/${encodeURIComponent(f.scheme_amfi)}`}
+      className="grid grid-cols-12 items-center gap-3 border-b border-black/5 px-6 py-5 transition-colors last:border-0 hover:bg-cloud"
+    >
+      <div className="col-span-5 flex items-center gap-3">
+        <CompanyLogo company={f.scheme_company_short_name || f.scheme_company} />
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold text-ink">
+            {f.scheme_amfi_short_name || f.scheme_amfi}
+          </div>
+          <div className="mt-1 inline-flex items-center gap-2 text-xs text-slate2">
+            <span className="truncate">{f.scheme_company_short_name || f.scheme_company}</span>
+            <span className="h-1 w-1 shrink-0 rounded-full bg-mist" />
+            <span className="truncate">{f.scheme_category}</span>
+          </div>
+        </div>
       </div>
 
-      {/* Table header */}
-      <div className="grid grid-cols-12 gap-3 border-b border-black/5 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate2">
-        <div className="col-span-5">Scheme</div>
-        <div className="col-span-2 text-right">NAV</div>
-        <div className="col-span-1 text-right">1Y</div>
-        <div className="col-span-1 text-right">3Y</div>
-        <div className="col-span-1 text-right">5Y</div>
-        <div className="col-span-2 text-right">TER</div>
+      <div className="col-span-2 text-right tabular text-sm font-semibold text-graphite">
+        ₹{formatNumberIN(f.price, 2)}
       </div>
 
-      {/* Fund rows */}
-      {slot.funds.map((f) => (
-        <Link
-          key={f.scheme_amfi}
-          href={`/funds/${encodeURIComponent(f.scheme_amfi)}`}
-          className="grid grid-cols-12 items-center gap-3 border-b border-black/5 px-6 py-5 transition-colors last:border-0 hover:bg-cloud"
-        >
-          <div className="col-span-5 flex items-center gap-3">
-            <CompanyLogo company={f.scheme_company_short_name || f.scheme_company} />
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-ink">
-                {f.scheme_amfi_short_name || f.scheme_amfi}
-              </div>
-              <div className="mt-1 inline-flex items-center gap-2 text-xs text-slate2">
-                <span className="truncate">{f.scheme_company_short_name || f.scheme_company}</span>
-                <span className="h-1 w-1 shrink-0 rounded-full bg-mist" />
-                <span className="truncate">{f.scheme_category}</span>
-              </div>
-            </div>
-          </div>
+      <ReturnCell value={f.returns_abs_1year} />
+      <ReturnCell value={f.returns_cmp_3year} />
+      <ReturnCell value={f.returns_cmp_5year} />
 
-          <div className="col-span-2 text-right tabular text-sm font-semibold text-graphite">
-            ₹{formatNumberIN(f.price, 2)}
-          </div>
-
-          <ReturnCell value={f.returns_abs_1year} />
-          <ReturnCell value={f.returns_cmp_3year} />
-          <ReturnCell value={f.returns_cmp_5year} />
-
-          <div className="col-span-2 text-right tabular text-sm text-slate1">
-            {f.ter != null && f.ter > 0 ? `${f.ter.toFixed(2)}%` : "—"}
-          </div>
-        </Link>
-      ))}
-    </div>
+      <div className="col-span-2 text-right tabular text-sm text-slate1">
+        {f.ter != null && f.ter > 0 ? `${f.ter.toFixed(2)}%` : "—"}
+      </div>
+    </Link>
   );
 }
 

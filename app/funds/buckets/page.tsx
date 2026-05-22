@@ -144,7 +144,7 @@ function BucketCard({
           <div>
             <div className="text-slate2">Funds</div>
             <div className="font-semibold text-graphite">
-              {analytics?.fundCount ?? bucket.slots.reduce((s, sl) => s + sl.pick, 0)}
+              {analytics?.fundCount ?? bucket.funds.length}
             </div>
           </div>
           {analytics?.blend3y != null && (

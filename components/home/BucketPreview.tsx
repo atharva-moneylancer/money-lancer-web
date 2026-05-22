@@ -77,7 +77,7 @@ function FeaturedCard({ bucket }: { bucket: BucketConfig }) {
         <div className="mt-3 flex items-center gap-3 text-xs text-slate2">
           <span>{bucket.holdingPeriod}</span>
           <span className="h-1 w-1 rounded-full bg-mist" />
-          <span>{bucket.slots.reduce((s, sl) => s + sl.pick, 0)} funds</span>
+          <span>{bucket.funds.length} funds</span>
         </div>
       </div>
       <div className="relative mt-5 inline-flex items-center text-sm font-semibold text-crayola">
