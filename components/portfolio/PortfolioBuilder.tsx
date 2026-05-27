@@ -496,51 +496,76 @@ export default function PortfolioBuilder() {
             {selected.map((fund, idx) => (
               <div
                 key={fund.name}
-                className="group flex items-center gap-4 rounded-2xl border border-black/[0.06] bg-white p-4 shadow-soft transition-all hover:shadow-md"
+                className="group rounded-2xl border border-black/[0.06] bg-white p-4 shadow-soft transition-all hover:shadow-md"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-mist text-xs font-bold text-slate2">
-                  {idx + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-ink">{fund.name}</p>
-                  {fund.isSpotlight && (
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <Icon id="sparkle" className="h-3 w-3 text-amber-500" />
-                      <span className="text-[11px] text-amber-600">Spotlight</span>
-                    </div>
-                  )}
-                </div>
+                {/* Top row: number + name + remove */}
                 <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={fund.allocation}
-                    onChange={(e) => updateAllocation(fund.name, Number(e.target.value))}
-                    className="hidden w-32 accent-crayola sm:block"
-                  />
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={fund.allocation || ""}
-                      onChange={(e) =>
-                        updateAllocation(fund.name, Math.max(0, Math.min(100, Number(e.target.value) || 0)))
-                      }
-                      className="h-10 w-[4.5rem] rounded-xl border border-black/[0.08] bg-cloud text-center text-sm font-bold text-ink focus:border-crayola focus:outline-none"
-                    />
-                    <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate2">%</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-mist text-xs font-bold text-slate2">
+                    {idx + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-ink">{fund.name}</p>
+                    {fund.isSpotlight && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Icon id="sparkle" className="h-3 w-3 text-amber-500" />
+                        <span className="text-[11px] text-amber-600">Spotlight</span>
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => setSelected((prev) => prev.filter((s) => s.name !== fund.name))}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-slate2 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-50 hover:text-red-500"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate2 transition-all hover:bg-red-50 hover:text-red-500"
                     title="Remove"
                   >
                     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                       <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                   </button>
+                </div>
+
+                {/* Bottom row: allocation controls */}
+                <div className="mt-3 flex items-center gap-2">
+                  {/* Minus button */}
+                  <button
+                    onClick={() => updateAllocation(fund.name, Math.max(0, fund.allocation - 5))}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/[0.08] bg-cloud text-slate1 transition-all hover:bg-mist hover:text-ink active:scale-95"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" d="M5 12h14" /></svg>
+                  </button>
+
+                  {/* Slider — visible on all screens */}
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={fund.allocation}
+                    onChange={(e) => updateAllocation(fund.name, Number(e.target.value))}
+                    className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-mist accent-crayola [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-crayola [&::-webkit-slider-thumb]:shadow-md"
+                  />
+
+                  {/* Plus button */}
+                  <button
+                    onClick={() => updateAllocation(fund.name, Math.min(100, fund.allocation + 5))}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/[0.08] bg-cloud text-slate1 transition-all hover:bg-mist hover:text-ink active:scale-95"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
+                  </button>
+
+                  {/* Number input */}
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      placeholder="0"
+                      value={fund.allocation || ""}
+                      onChange={(e) =>
+                        updateAllocation(fund.name, Math.max(0, Math.min(100, Number(e.target.value) || 0)))
+                      }
+                      className="h-10 w-[4.5rem] rounded-xl border border-black/[0.08] bg-cloud pr-7 text-center text-sm font-bold text-ink transition-all focus:border-crayola focus:bg-white focus:outline-none focus:ring-2 focus:ring-crayola/20"
+                    />
+                    <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate2">%</span>
+                  </div>
                 </div>
               </div>
             ))}
