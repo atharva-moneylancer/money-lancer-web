@@ -11,9 +11,14 @@ export interface SpotlightFund {
   investors: number;
 }
 
+export type IconId =
+  | "bar-chart" | "trending-up" | "zap" | "refresh" | "crosshair"
+  | "search" | "scale" | "grid" | "droplet" | "graduation"
+  | "flame" | "globe" | "diamond" | "building" | "coins";
+
 export interface FundGroup {
   label: string;
-  icon: string;
+  icon: IconId;
   color: string;          // tailwind bg class for the category pill
   colorText: string;      // tailwind text class
   colorBorder: string;    // tailwind border class for selected card
@@ -35,7 +40,7 @@ function sf(name: string, category: string): SpotlightFund {
 export const SPOTLIGHT_GROUPS: FundGroup[] = [
   {
     label: "Large & Mid Cap",
-    icon: "📊",
+    icon: "bar-chart",
     color: "bg-blue-50", colorText: "text-blue-700", colorBorder: "border-blue-400",
     funds: [
       sf("Bandhan Large & Midcap Fund", "Large & Mid Cap"),
@@ -45,7 +50,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Mid Cap",
-    icon: "🚀",
+    icon: "trending-up",
     color: "bg-indigo-50", colorText: "text-indigo-700", colorBorder: "border-indigo-400",
     funds: [
       sf("Edelweiss Midcap Fund", "Mid Cap"),
@@ -55,7 +60,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Small Cap",
-    icon: "⚡",
+    icon: "zap",
     color: "bg-purple-50", colorText: "text-purple-700", colorBorder: "border-purple-400",
     funds: [
       sf("Bandhan Smallcap Fund", "Small Cap"),
@@ -65,7 +70,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Flexi Cap",
-    icon: "🔄",
+    icon: "refresh",
     color: "bg-cyan-50", colorText: "text-cyan-700", colorBorder: "border-cyan-400",
     funds: [
       sf("Bajaj Flexi Cap Fund", "Flexi Cap"),
@@ -75,7 +80,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Multi Cap",
-    icon: "🎯",
+    icon: "crosshair",
     color: "bg-teal-50", colorText: "text-teal-700", colorBorder: "border-teal-400",
     funds: [
       sf("Kotak Multi Cap Fund", "Multi Cap"),
@@ -85,7 +90,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Focused",
-    icon: "🔍",
+    icon: "search",
     color: "bg-sky-50", colorText: "text-sky-700", colorBorder: "border-sky-400",
     funds: [
       sf("HDFC Focused Equity Fund", "Focused"),
@@ -95,7 +100,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Hybrid",
-    icon: "⚖️",
+    icon: "scale",
     color: "bg-emerald-50", colorText: "text-emerald-700", colorBorder: "border-emerald-400",
     funds: [
       sf("ICICI Pru Equity & Debt Fund", "Aggressive Hybrid"),
@@ -105,7 +110,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Multi-Asset",
-    icon: "🧩",
+    icon: "grid",
     color: "bg-lime-50", colorText: "text-lime-700", colorBorder: "border-lime-500",
     funds: [
       sf("Kotak Multi-asset Allocation Fund", "Multi Asset"),
@@ -115,7 +120,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Savings & Liquid",
-    icon: "💧",
+    icon: "droplet",
     color: "bg-green-50", colorText: "text-green-700", colorBorder: "border-green-400",
     funds: [
       sf("ICICI Equity Savings Fund", "Equity Savings"),
@@ -124,7 +129,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Life Goals",
-    icon: "🎓",
+    icon: "graduation",
     color: "bg-amber-50", colorText: "text-amber-700", colorBorder: "border-amber-400",
     funds: [
       sf("HDFC Retirement Fund", "Retirement"),
@@ -134,7 +139,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Thematic",
-    icon: "🔥",
+    icon: "flame",
     color: "bg-orange-50", colorText: "text-orange-700", colorBorder: "border-orange-400",
     funds: [
       sf("ICICI India Opportunities Fund", "Thematic"),
@@ -147,7 +152,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "Global",
-    icon: "🌍",
+    icon: "globe",
     color: "bg-violet-50", colorText: "text-violet-700", colorBorder: "border-violet-400",
     funds: [
       sf("DSP Global Equity Fund", "International"),
@@ -158,7 +163,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "SIF",
-    icon: "💎",
+    icon: "diamond",
     color: "bg-rose-50", colorText: "text-rose-700", colorBorder: "border-rose-400",
     funds: [
       sf("ITI Diviniti SIF", "SIF"),
@@ -167,7 +172,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "PMS",
-    icon: "🏛️",
+    icon: "building",
     color: "bg-slate-100", colorText: "text-slate-700", colorBorder: "border-slate-400",
     funds: [
       sf("Ckredence Wealth PMS", "PMS"),
@@ -176,7 +181,7 @@ export const SPOTLIGHT_GROUPS: FundGroup[] = [
   },
   {
     label: "IDCW",
-    icon: "💰",
+    icon: "coins",
     color: "bg-yellow-50", colorText: "text-yellow-700", colorBorder: "border-yellow-400",
     funds: [
       sf("Bandhan Aggressive Hybrid Fund – IDCW", "IDCW"),

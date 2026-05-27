@@ -1,8 +1,76 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { SPOTLIGHT_GROUPS, type SpotlightFund, type FundGroup } from "@/lib/portfolio-funds";
+import { SPOTLIGHT_GROUPS, type SpotlightFund, type FundGroup, type IconId } from "@/lib/portfolio-funds";
 import { cn } from "@/lib/utils";
+
+/* ------------------------------------------------------------------ */
+/*  SVG Icon System                                                    */
+/* ------------------------------------------------------------------ */
+
+function Icon({ id, className = "h-4 w-4" }: { id: string; className?: string }) {
+  const props = { className, fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 1.75, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+
+  switch (id) {
+    case "bar-chart":
+      return <svg {...props}><path d="M18 20V10M12 20V4M6 20v-6" /></svg>;
+    case "trending-up":
+      return <svg {...props}><path d="M22 7l-8.5 8.5-5-5L2 17" /><path d="M16 7h6v6" /></svg>;
+    case "zap":
+      return <svg {...props} fill="currentColor" stroke="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>;
+    case "refresh":
+      return <svg {...props}><path d="M23 4v6h-6" /><path d="M1 20v-6h6" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" /></svg>;
+    case "crosshair":
+      return <svg {...props}><circle cx="12" cy="12" r="10" /><path d="M22 12h-4M6 12H2M12 6V2M12 22v-4" /></svg>;
+    case "search":
+      return <svg {...props}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>;
+    case "scale":
+      return <svg {...props}><path d="M12 3v18" /><path d="M4.5 7.5L12 3l7.5 4.5" /><path d="M4.5 7.5l-2 8h7l-2-8" /><path d="M19.5 7.5l-2 8h7l-2-8" /></svg>;
+    case "grid":
+      return <svg {...props}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>;
+    case "droplet":
+      return <svg {...props}><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" /></svg>;
+    case "graduation":
+      return <svg {...props}><path d="M22 10l-10-5L2 10l10 5 10-5z" /><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5" /><path d="M22 10v6" /></svg>;
+    case "flame":
+      return <svg {...props}><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" /></svg>;
+    case "globe":
+      return <svg {...props}><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></svg>;
+    case "diamond":
+      return <svg {...props}><path d="M2.7 10.3a2.41 2.41 0 000 3.41l7.59 7.59a2.41 2.41 0 003.41 0l7.59-7.59a2.41 2.41 0 000-3.41L13.7 2.71a2.41 2.41 0 00-3.41 0z" /></svg>;
+    case "building":
+      return <svg {...props}><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" /></svg>;
+    case "coins":
+      return <svg {...props}><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1110.34 18" /><path d="M7 6h1v4" /><path d="M16.71 13.88l.7.71-2.82 2.82" /></svg>;
+    /* Step icons */
+    case "step-pick":
+      return <svg {...props}><circle cx="12" cy="12" r="10" /><path d="M22 12h-4M6 12H2M12 6V2M12 22v-4" /></svg>;
+    case "step-allocate":
+      return <svg {...props}><circle cx="12" cy="12" r="10" /><path d="M12 2a10 10 0 0110 10" /><path d="M12 12l5-5" /></svg>;
+    case "step-details":
+      return <svg {...props}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
+    case "step-send":
+      return <svg {...props}><path d="M22 2L11 13" /><path d="M22 2L15 22l-4-9-9-4 20-7z" /></svg>;
+    case "check":
+      return <svg {...props}><path d="M20 6L9 17l-5-5" /></svg>;
+    /* Risk profile icons */
+    case "shield":
+      return <svg {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>;
+    case "balance":
+      return <svg {...props}><path d="M12 3v18" /><path d="M4.5 7.5L12 3l7.5 4.5" /><path d="M4.5 7.5l-2 8h7l-2-8" /><path d="M19.5 7.5l-2 8h7l-2-8" /></svg>;
+    case "rocket":
+      return <svg {...props}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z" /><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" /><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /></svg>;
+    case "bolt":
+      return <svg {...props} fill="currentColor" stroke="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>;
+    /* Misc */
+    case "pencil":
+      return <svg {...props}><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" /></svg>;
+    case "sparkle":
+      return <svg {...props}><path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74L12 2z" /></svg>;
+    default:
+      return <svg {...props}><circle cx="12" cy="12" r="10" /></svg>;
+  }
+}
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -17,10 +85,10 @@ interface SelectedFund {
 type Step = "pick" | "allocate" | "details" | "review";
 
 const STEPS: { key: Step; label: string; icon: string }[] = [
-  { key: "pick", label: "Pick Funds", icon: "🎯" },
-  { key: "allocate", label: "Allocate %", icon: "⚖️" },
-  { key: "details", label: "Your Info", icon: "👤" },
-  { key: "review", label: "Send", icon: "✓" },
+  { key: "pick", label: "Pick Funds", icon: "step-pick" },
+  { key: "allocate", label: "Allocate %", icon: "step-allocate" },
+  { key: "details", label: "Your Info", icon: "step-details" },
+  { key: "review", label: "Send", icon: "step-send" },
 ];
 
 const WA_NUMBER = "919209039205";
@@ -145,7 +213,10 @@ export default function PortfolioBuilder() {
                   : "bg-mist text-slate2"
               )}
             >
-              <span className="text-base">{i < stepIndex ? "✓" : s.icon}</span>
+              {i < stepIndex
+                ? <Icon id="check" className="h-4 w-4" />
+                : <Icon id={s.icon} className="h-4 w-4" />
+              }
               <span className="hidden sm:inline">{s.label}</span>
             </button>
             {i < STEPS.length - 1 && (
@@ -170,7 +241,7 @@ export default function PortfolioBuilder() {
             </svg>
             <input
               type="text"
-              placeholder="Search spotlight funds…"
+              placeholder="Search spotlight funds..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-12 w-full rounded-2xl border border-black/[0.08] bg-white pl-12 pr-4 text-[15px] text-ink shadow-soft transition-all placeholder:text-slate2 focus:border-crayola focus:outline-none focus:ring-2 focus:ring-crayola/20"
@@ -180,7 +251,7 @@ export default function PortfolioBuilder() {
                 onClick={() => setSearchQuery("")}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate2 hover:text-ink"
               >
-                ✕
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" /></svg>
               </button>
             )}
           </div>
@@ -205,7 +276,7 @@ export default function PortfolioBuilder() {
                           : "bg-white text-slate1 hover:bg-mist"
                       )}
                     >
-                      <span className="text-base">{g.icon}</span>
+                      <Icon id={g.icon} className="h-4 w-4" />
                       <span className="whitespace-nowrap">{g.label}</span>
                       {count > 0 && (
                         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-crayola text-[10px] font-bold text-white">
@@ -238,7 +309,9 @@ export default function PortfolioBuilder() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <span className="text-4xl">🔍</span>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mist text-slate2">
+                    <Icon id="search" className="h-6 w-6" />
+                  </div>
                   <p className="mt-3 text-sm font-semibold text-ink">
                     No spotlight funds match &ldquo;{searchQuery}&rdquo;
                   </p>
@@ -251,8 +324,8 @@ export default function PortfolioBuilder() {
               <>
                 {/* Active group header */}
                 <div className="mb-4 flex items-center gap-3">
-                  <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl text-xl", activeGroup.color)}>
-                    {activeGroup.icon}
+                  <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", activeGroup.color, activeGroup.colorText)}>
+                    <Icon id={activeGroup.icon} className="h-5 w-5" />
                   </span>
                   <div>
                     <h3 className="text-title-s font-bold text-ink">{activeGroup.label}</h3>
@@ -277,13 +350,15 @@ export default function PortfolioBuilder() {
           {/* Add custom fund — compact */}
           <div className="rounded-2xl border border-dashed border-yale/20 bg-gradient-to-r from-yale/[0.02] to-crayola/[0.02] p-5">
             <div className="flex items-center gap-2 mb-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-yale/10 text-sm">✏️</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-yale/10 text-yale">
+                <Icon id="pencil" className="h-3.5 w-3.5" />
+              </span>
               <p className="text-sm font-semibold text-yale">Add any fund by name</p>
             </div>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="e.g. SBI Bluechip Fund, Mirae Asset Large Cap…"
+                placeholder="e.g. SBI Bluechip Fund, Mirae Asset Large Cap..."
                 value={customFund}
                 onChange={(e) => setCustomFund(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addCustomFund()}
@@ -318,12 +393,12 @@ export default function PortfolioBuilder() {
                         key={s.name}
                         className="group inline-flex items-center gap-1 rounded-lg bg-crayola/[0.07] px-2.5 py-1 text-xs font-medium text-yale transition-colors hover:bg-red-50 hover:text-red-600"
                       >
-                        {s.name.length > 20 ? s.name.slice(0, 20) + "…" : s.name}
+                        {s.name.length > 20 ? s.name.slice(0, 20) + "..." : s.name}
                         <button
                           onClick={() => toggleFund(s.name, s.isSpotlight)}
                           className="text-yale/50 group-hover:text-red-500"
                         >
-                          ×
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" /></svg>
                         </button>
                       </span>
                     ))}
@@ -334,7 +409,7 @@ export default function PortfolioBuilder() {
                   disabled={!canProceedFromPick}
                   className="ml-4 h-12 shrink-0 rounded-xl bg-crayola px-6 text-sm font-bold text-white shadow-lift transition-all hover:bg-[#1262d6] hover:shadow-glow disabled:opacity-40"
                 >
-                  Allocate →
+                  Allocate &rarr;
                 </button>
               </div>
             </div>
@@ -356,9 +431,10 @@ export default function PortfolioBuilder() {
             </div>
             <button
               onClick={equalSplit}
-              className="h-10 rounded-xl border border-yale/20 bg-yale/5 px-5 text-sm font-semibold text-yale transition-all hover:bg-yale/10"
+              className="flex items-center gap-1.5 h-10 rounded-xl border border-yale/20 bg-yale/5 px-5 text-sm font-semibold text-yale transition-all hover:bg-yale/10"
             >
-              ⚡ Split equally
+              <Icon id="zap" className="h-3.5 w-3.5" />
+              Split equally
             </button>
           </div>
 
@@ -422,7 +498,10 @@ export default function PortfolioBuilder() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink">{fund.name}</p>
                   {fund.isSpotlight && (
-                    <span className="text-[11px] text-amber-600">✦ Spotlight</span>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <Icon id="sparkle" className="h-3 w-3 text-amber-500" />
+                      <span className="text-[11px] text-amber-600">Spotlight</span>
+                    </div>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
@@ -466,14 +545,14 @@ export default function PortfolioBuilder() {
               onClick={() => setStep("pick")}
               className="h-11 rounded-xl border border-black/[0.08] bg-white px-6 text-sm font-semibold text-ink shadow-soft transition-all hover:bg-cloud"
             >
-              ← Back
+              &larr; Back
             </button>
             <button
               onClick={() => setStep("details")}
               disabled={!canProceedFromAllocate}
               className="h-11 rounded-xl bg-crayola px-6 text-sm font-bold text-white shadow-lift transition-all hover:bg-[#1262d6] hover:shadow-glow disabled:opacity-40"
             >
-              Continue →
+              Continue &rarr;
             </button>
           </div>
         </div>
@@ -485,8 +564,10 @@ export default function PortfolioBuilder() {
       {step === "details" && (
         <div className="mx-auto max-w-lg space-y-6">
           <div className="text-center">
-            <span className="text-4xl">👤</span>
-            <h3 className="mt-2 text-title-s font-bold text-ink">Almost there!</h3>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-crayola/10 text-crayola">
+              <Icon id="step-details" className="h-7 w-7" />
+            </div>
+            <h3 className="mt-3 text-title-s font-bold text-ink">Almost there!</h3>
             <p className="mt-1 text-sm text-slate1">
               We&apos;ll use these details to reach out and help you invest.
             </p>
@@ -494,30 +575,35 @@ export default function PortfolioBuilder() {
 
           <div className="space-y-4 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-soft">
             <FieldInput label="Full Name" value={name} onChange={setName} placeholder="Your name" required />
-            <FieldInput label="Phone" value={phone} onChange={setPhone} placeholder="+91 …" required />
+            <FieldInput label="Phone" value={phone} onChange={setPhone} placeholder="+91 ..." required />
             <FieldInput label="Email" value={email} onChange={setEmail} placeholder="you@email.com" type="email" />
-            <FieldInput label="Investment Amount (₹)" value={amount} onChange={setAmount} placeholder="e.g. 50,000" required />
+            <FieldInput label="Investment Amount" value={amount} onChange={setAmount} placeholder="e.g. 50,000" required />
 
             <div>
               <label className="mb-2 block text-sm font-semibold text-ink">Risk Profile</label>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { value: "Conservative", icon: "🛡️", desc: "Low risk" },
-                  { value: "Moderate", icon: "⚖️", desc: "Balanced" },
-                  { value: "Aggressive", icon: "🚀", desc: "High growth" },
-                  { value: "Very Aggressive", icon: "🔥", desc: "Max returns" },
+                  { value: "Conservative", icon: "shield" as const, desc: "Low risk" },
+                  { value: "Moderate", icon: "balance" as const, desc: "Balanced" },
+                  { value: "Aggressive", icon: "rocket" as const, desc: "High growth" },
+                  { value: "Very Aggressive", icon: "bolt" as const, desc: "Max returns" },
                 ].map((r) => (
                   <button
                     key={r.value}
                     onClick={() => setRiskProfile(r.value)}
                     className={cn(
-                      "flex items-center gap-2 rounded-xl border p-3 text-left transition-all",
+                      "flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all",
                       riskProfile === r.value
                         ? "border-crayola bg-crayola/[0.06] shadow-sm"
                         : "border-black/[0.06] bg-white hover:border-yale/20 hover:bg-mist"
                     )}
                   >
-                    <span className="text-xl">{r.icon}</span>
+                    <div className={cn(
+                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                      riskProfile === r.value ? "bg-crayola/10 text-crayola" : "bg-mist text-slate2"
+                    )}>
+                      <Icon id={r.icon} className="h-4.5 w-4.5" />
+                    </div>
                     <div>
                       <p className={cn("text-sm font-semibold", riskProfile === r.value ? "text-crayola" : "text-ink")}>{r.value}</p>
                       <p className="text-[11px] text-slate2">{r.desc}</p>
@@ -553,14 +639,14 @@ export default function PortfolioBuilder() {
               onClick={() => setStep("allocate")}
               className="h-11 rounded-xl border border-black/[0.08] bg-white px-6 text-sm font-semibold text-ink shadow-soft transition-all hover:bg-cloud"
             >
-              ← Back
+              &larr; Back
             </button>
             <button
               onClick={() => setStep("review")}
               disabled={!canProceedFromDetails}
               className="h-11 rounded-xl bg-crayola px-6 text-sm font-bold text-white shadow-lift transition-all hover:bg-[#1262d6] hover:shadow-glow disabled:opacity-40"
             >
-              Review →
+              Review &rarr;
             </button>
           </div>
         </div>
@@ -572,8 +658,10 @@ export default function PortfolioBuilder() {
       {step === "review" && (
         <div className="mx-auto max-w-lg space-y-6">
           <div className="text-center">
-            <span className="text-4xl">🎉</span>
-            <h3 className="mt-2 text-title-s font-bold text-ink">Your portfolio is ready!</h3>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+              <Icon id="check" className="h-7 w-7" />
+            </div>
+            <h3 className="mt-3 text-title-s font-bold text-ink">Your portfolio is ready!</h3>
             <p className="mt-1 text-sm text-slate1">
               Review everything, then send it to our team.
             </p>
@@ -583,7 +671,7 @@ export default function PortfolioBuilder() {
           <div className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-soft">
             <div className="border-b border-black/[0.06] bg-mist/50 px-6 py-3">
               <h4 className="text-sm font-semibold uppercase tracking-wider text-slate2">
-                Portfolio — {selected.length} fund{selected.length !== 1 ? "s" : ""}
+                Portfolio &mdash; {selected.length} fund{selected.length !== 1 ? "s" : ""}
               </h4>
             </div>
             <div className="divide-y divide-black/[0.04] px-6">
@@ -629,7 +717,7 @@ export default function PortfolioBuilder() {
               onClick={() => setStep("details")}
               className="h-11 rounded-xl border border-black/[0.08] bg-white px-6 text-sm font-semibold text-ink shadow-soft transition-all hover:bg-cloud"
             >
-              ← Back
+              &larr; Back
             </button>
             <button
               onClick={sendWhatsApp}
@@ -688,17 +776,18 @@ function FundCard({
     >
       {/* Selected indicator */}
       <div className={cn(
-        "absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
+        "absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200",
         selected
           ? "bg-crayola text-white scale-100"
           : "border-2 border-black/[0.08] bg-white scale-90 group-hover:border-yale/30"
       )}>
-        {selected && "✓"}
+        {selected && <Icon id="check" className="h-3.5 w-3.5" />}
       </div>
 
       {/* Category badge */}
       <span className={cn("inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-semibold", group.color, group.colorText)}>
-        {group.icon} {fund.category}
+        <Icon id={group.icon} className="h-3 w-3" />
+        {fund.category}
       </span>
 
       {/* Fund name */}
