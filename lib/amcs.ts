@@ -55,7 +55,7 @@ export const AMCS: AMC[] = [
   { slug: "sundaram",                name: "Sundaram",                      apiName: "Sundaram Mutual Fund",                         logo: "/amcs/sundaram.webp",     aliases: ["SundaramMF"] },
   { slug: "tata",                    name: "Tata",                          apiName: "Tata Mutual Fund",                             logo: "/amcs/tata.webp",         aliases: ["TataMF"] },
   { slug: "taurus",                  name: "Taurus",                        apiName: "Taurus Mutual Fund",                           logo: "/amcs/taurus.webp",       aliases: ["TaurusMF"] },
-  { slug: "the",                     name: "The",                           apiName: "The Mutual Fund",                              logo: "/amcs/the.webp",          aliases: ["TheMF"] },
+  { slug: "the-wealth-company",       name: "The Wealth Company",            apiName: "The Mutual Fund",                              logo: "/amcs/the.webp",          aliases: ["TheMF", "TheWealth"] },
   { slug: "trust",                   name: "Trust",                         apiName: "Trust Mutual Fund",                            logo: "/amcs/trust.webp",        aliases: ["TrustMF"] },
   { slug: "unifi",                   name: "Unifi",                         apiName: "Unifi Mutual Fund",                            logo: "/amcs/unifi.webp",        aliases: ["UnifiMF"] },
   { slug: "union",                   name: "Union",                         apiName: "Union Mutual Fund",                            logo: "/amcs/union.webp",        aliases: ["UnionMF"] },

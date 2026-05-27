@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { SPOTLIGHT_GROUPS, type SpotlightFund, type FundGroup, type IconId } from "@/lib/portfolio-funds";
+import { getAmcForName, type AMC } from "@/lib/amcs";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -112,6 +113,9 @@ export default function PortfolioBuilder() {
   const [amount, setAmount] = useState("");
   const [riskProfile, setRiskProfile] = useState("");
   const [investmentMode, setInvestmentMode] = useState<"SIP" | "Lumpsum" | "Both">("SIP");
+
+  // Fund info modal
+  const [modalFund, setModalFund] = useState<{ fund: SpotlightFund; group: FundGroup } | null>(null);
 
   /* helpers */
   const isSelected = (fundName: string) => selected.some((s) => s.name === fundName);
@@ -304,6 +308,7 @@ export default function PortfolioBuilder() {
                       group={group}
                       selected={isSelected(fund.name)}
                       onToggle={() => toggleFund(fund.name, true)}
+                      onInfo={() => setModalFund({ fund, group })}
                     />
                   ))}
                 </div>
@@ -340,6 +345,7 @@ export default function PortfolioBuilder() {
                       group={activeGroup}
                       selected={isSelected(fund.name)}
                       onToggle={() => toggleFund(fund.name, true)}
+                      onInfo={() => setModalFund({ fund, group: activeGroup })}
                     />
                   ))}
                 </div>
@@ -740,6 +746,19 @@ export default function PortfolioBuilder() {
         </div>
       )}
 
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/*  Fund Info Modal                                                */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {modalFund && (
+        <FundInfoModal
+          fund={modalFund.fund}
+          group={modalFund.group}
+          selected={isSelected(modalFund.fund.name)}
+          onToggle={() => toggleFund(modalFund.fund.name, true)}
+          onClose={() => setModalFund(null)}
+        />
+      )}
+
       {/* scrollbar-hide utility */}
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -758,57 +777,195 @@ function FundCard({
   group,
   selected,
   onToggle,
+  onInfo,
 }: {
   fund: SpotlightFund;
   group: FundGroup;
   selected: boolean;
   onToggle: () => void;
+  onInfo: () => void;
 }) {
+  const amc = getAmcForName(fund.name);
+
   return (
-    <button
-      onClick={onToggle}
+    <div
       className={cn(
-        "group relative overflow-hidden rounded-2xl border-2 p-5 text-left transition-all duration-200",
+        "group relative overflow-hidden rounded-2xl border-2 p-5 text-left transition-all duration-200 cursor-pointer",
         selected
           ? `${group.colorBorder} bg-white shadow-md scale-[1.02]`
           : "border-transparent bg-white shadow-soft hover:shadow-lg hover:scale-[1.01]"
       )}
+      onClick={onInfo}
     >
-      {/* Selected indicator */}
-      <div className={cn(
-        "absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200",
-        selected
-          ? "bg-crayola text-white scale-100"
-          : "border-2 border-black/[0.08] bg-white scale-90 group-hover:border-yale/30"
-      )}>
+      {/* Select checkbox — top right */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggle(); }}
+        className={cn(
+          "absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200 z-10",
+          selected
+            ? "bg-crayola text-white scale-100"
+            : "border-2 border-black/[0.08] bg-white scale-90 group-hover:border-yale/30 hover:border-crayola hover:bg-crayola/5"
+        )}
+        title={selected ? "Remove from portfolio" : "Add to portfolio"}
+      >
         {selected && <Icon id="check" className="h-3.5 w-3.5" />}
-      </div>
+      </button>
 
-      {/* Category badge */}
-      <span className={cn("inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-semibold", group.color, group.colorText)}>
-        <Icon id={group.icon} className="h-3 w-3" />
-        {fund.category}
-      </span>
+      {/* AMC logo + category badge row */}
+      <div className="flex items-center gap-2">
+        {amc ? (
+          <img
+            src={amc.logo}
+            alt={amc.name}
+            className="h-7 w-7 rounded-md object-contain bg-white ring-1 ring-black/[0.06]"
+          />
+        ) : (
+          <span className={cn("flex h-7 w-7 items-center justify-center rounded-md", group.color, group.colorText)}>
+            <Icon id={group.icon} className="h-3.5 w-3.5" />
+          </span>
+        )}
+        <span className={cn("inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-semibold", group.color, group.colorText)}>
+          {fund.category}
+        </span>
+      </div>
 
       {/* Fund name */}
       <p className="mt-2.5 pr-8 text-[15px] font-bold leading-snug text-ink">
         {fund.name}
       </p>
 
-      {/* Social proof */}
-      <div className="mt-3 flex items-center gap-1.5">
-        <div className="flex -space-x-1.5">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-amber-200 to-amber-400 text-[8px] font-bold text-amber-800">
-              {["A", "M", "S"][i]}
-            </div>
-          ))}
-        </div>
-        <span className="text-xs font-medium text-amber-700">
-          {fund.investors.toLocaleString("en-IN")} Moneylancers invested
+      {/* AMC name + investor count */}
+      <div className="mt-3 flex items-center justify-between">
+        {amc && (
+          <span className="text-[11px] font-medium text-slate2">{amc.name}</span>
+        )}
+        <span className="text-xs font-medium text-amber-700 ml-auto">
+          {fund.investors.toLocaleString("en-IN")} invested
         </span>
       </div>
-    </button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Fund Info Modal                                                    */
+/* ------------------------------------------------------------------ */
+
+function FundInfoModal({
+  fund,
+  group,
+  selected,
+  onToggle,
+  onClose,
+}: {
+  fund: SpotlightFund;
+  group: FundGroup;
+  selected: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+}) {
+  const amc = getAmcForName(fund.name);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+      {/* Modal */}
+      <div
+        className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/5 text-slate2 transition-colors hover:bg-black/10 hover:text-ink"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Header with AMC branding */}
+        <div className={cn("px-6 pt-6 pb-5", group.color)}>
+          <div className="flex items-center gap-3">
+            {amc ? (
+              <img
+                src={amc.logo}
+                alt={amc.name}
+                className="h-12 w-12 rounded-xl object-contain bg-white p-1 ring-1 ring-black/[0.06] shadow-sm"
+              />
+            ) : (
+              <span className={cn("flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm", group.colorText)}>
+                <Icon id={group.icon} className="h-6 w-6" />
+              </span>
+            )}
+            <div className="min-w-0 flex-1 pr-8">
+              <h3 className="text-lg font-bold leading-snug text-ink">{fund.name}</h3>
+              {amc && <p className="mt-0.5 text-sm text-slate1">{amc.name}</p>}
+            </div>
+          </div>
+        </div>
+
+        {/* Fund details */}
+        <div className="px-6 py-5 space-y-4">
+          {/* Info grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-mist p-3">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-slate2">Category</p>
+              <p className="mt-1 text-sm font-semibold text-ink">{fund.category}</p>
+            </div>
+            <div className="rounded-xl bg-mist p-3">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-slate2">Type</p>
+              <p className="mt-1 text-sm font-semibold text-ink">{group.label}</p>
+            </div>
+            <div className="rounded-xl bg-mist p-3">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-slate2">Investors</p>
+              <p className="mt-1 text-sm font-semibold text-ink">{fund.investors.toLocaleString("en-IN")}+</p>
+            </div>
+            <div className="rounded-xl bg-mist p-3">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-slate2">Plan</p>
+              <p className="mt-1 text-sm font-semibold text-ink">Regular</p>
+            </div>
+          </div>
+
+          {/* Spotlight badge */}
+          <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3">
+            <Icon id="sparkle" className="h-4 w-4 text-amber-500" />
+            <p className="text-sm font-medium text-amber-800">
+              In the Spotlight — curated by ML Research
+            </p>
+          </div>
+
+          {/* Disclaimer */}
+          <p className="text-[11px] leading-relaxed text-slate2">
+            Mutual fund investments are subject to market risks. Read all scheme-related documents carefully.
+            Past performance is not indicative of future results.
+          </p>
+        </div>
+
+        {/* Action bar */}
+        <div className="flex gap-3 border-t border-black/[0.06] bg-mist/30 px-6 py-4">
+          <button
+            onClick={onClose}
+            className="flex-1 h-11 rounded-xl border border-black/[0.08] bg-white text-sm font-semibold text-ink transition-all hover:bg-cloud"
+          >
+            Close
+          </button>
+          <button
+            onClick={() => { onToggle(); onClose(); }}
+            className={cn(
+              "flex-1 h-11 rounded-xl text-sm font-bold transition-all",
+              selected
+                ? "border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                : "bg-crayola text-white shadow-lift hover:bg-[#1262d6] hover:shadow-glow"
+            )}
+          >
+            {selected ? "Remove from Portfolio" : "Add to Portfolio"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
