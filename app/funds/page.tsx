@@ -148,7 +148,7 @@ export default async function FundsPage({
           Research every fund. Pick the right ones.
         </h1>
         <p className="mt-4 max-w-2xl text-body-l text-slate1">
-          Live data from AdvisorKhoj. Compare returns, expense ratios and
+          Live data, updated daily. Compare returns, expense ratios and
           rankings across categories and AMCs.
         </p>
 

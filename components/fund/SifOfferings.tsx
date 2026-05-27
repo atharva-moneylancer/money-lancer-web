@@ -85,7 +85,7 @@ export default async function SifOfferings() {
           </h2>
           <p className="mt-2 text-body-m text-slate1">
             Regular-Plan SIFs from {grouped.size} fund {grouped.size === 1 ? "house" : "houses"}.
-            Updated daily from AdvisorKhoj.
+            Updated daily.
           </p>
         </div>
         <div className="text-xs text-slate2">{schemes.length} schemes</div>
@@ -138,7 +138,7 @@ export default async function SifOfferings() {
       </div>
 
       <p className="mt-6 text-[11px] leading-relaxed text-slate2">
-        Source: AdvisorKhoj scheme master, refreshed weekly. SIFs require ₹10 lakh minimum investment
+        Data refreshed weekly. SIFs require ₹10 lakh minimum investment
         per SEBI norms. Every SIF here is the Regular Plan — backed by a continuous advisor relationship.
       </p>
     </section>

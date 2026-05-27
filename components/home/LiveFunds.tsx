@@ -46,7 +46,7 @@ export default async function LiveFunds() {
               Top large-cap funds, refreshed daily.
             </h2>
             <p className="mt-4 text-body-l text-slate1">
-              Powered by AdvisorKhoj. NAVs, returns and rankings updated as the market closes —
+              NAVs, returns and rankings updated as the market closes —
               not a static list.
             </p>
           </div>

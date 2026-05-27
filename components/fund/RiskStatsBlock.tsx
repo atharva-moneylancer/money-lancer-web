@@ -129,7 +129,7 @@ export function RiskStatsBlock({
           <div className="mt-0.5 text-xs text-slate2">3-year rolling · vs benchmark</div>
         </div>
         <span className="rounded-full border border-black/[0.06] bg-cloud px-2.5 py-1 text-[10px] font-medium text-slate2">
-          AdvisorKhoj
+          3Y Risk
         </span>
       </div>
 

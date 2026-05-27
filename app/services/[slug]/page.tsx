@@ -65,7 +65,7 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
               <div>
                 <h2 className="text-title-m font-bold text-yale">Available SIF options</h2>
                 <p className="mt-2 text-sm text-slate1">
-                  Live from AdvisorKhoj. We add a fund here once it's approved by SEBI and we've
+                  We add a fund here once it's approved by SEBI and we've
                   reviewed the manager's track record.
                 </p>
                 <div className="mt-4">

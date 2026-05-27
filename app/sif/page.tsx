@@ -79,7 +79,7 @@ export default async function SIFPage() {
             Available SIF Schemes
           </h2>
           <p className="mt-1 text-sm text-slate1">
-            Sourced from AdvisorKhoj. Data refreshes every 6 hours.
+            Data refreshes every 6 hours.
           </p>
 
           {fetchError ? (
