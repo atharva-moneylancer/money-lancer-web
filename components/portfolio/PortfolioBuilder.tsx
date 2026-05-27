@@ -230,9 +230,6 @@ export default function PortfolioBuilder() {
             <div className="mb-4 flex items-center gap-2">
               <span className="text-lg">✦</span>
               <h3 className="text-title-s font-bold text-ink">In the Spotlight</h3>
-              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
-                ML Research Picks
-              </span>
             </div>
 
             {filteredGroups.map((group) => (
