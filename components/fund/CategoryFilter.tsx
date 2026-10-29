@@ -30,7 +30,7 @@ export function CategoryFilter({
   return (
     <div className="mt-10">
       {/* ── Tier 1: Asset-class tabs ── */}
-      <div className="flex items-center gap-1 border-b border-black/[0.07]">
+      <div className="flex w-full min-w-0 max-w-full items-center gap-1 overflow-x-auto border-b border-black/[0.07]">
         {/* All tab */}
         <Tab
           label="All Funds"
