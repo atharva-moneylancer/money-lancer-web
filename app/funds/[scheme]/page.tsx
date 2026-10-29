@@ -192,23 +192,25 @@ export default async function FundDetail({ params }: Params) {
         {peerList.length > 0 && (
           <section className="mt-14">
             <SectionTitle eyebrow="Peers" title={`Other ${info.scheme_category} funds`} />
-            <div className="mt-6 overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-soft">
-              {peerList.map((p: any) => (
-                <Link
-                  key={p.scheme_amfi}
-                  href={`/funds/${encodeURIComponent(p.scheme_amfi)}`}
-                  className="grid grid-cols-12 items-center gap-3 border-b border-black/5 px-6 py-4 transition-colors last:border-0 hover:bg-cloud"
-                >
-                  <div className="col-span-6 flex items-center gap-3">
-                    <CompanyLogo company={p.scheme_company} size={32} />
-                    <div className="min-w-0 truncate text-sm font-semibold text-ink">{p.scheme_amfi_short_name || p.scheme_amfi}</div>
-                  </div>
-                  <div className="col-span-2 text-right tabular text-sm text-graphite">₹{formatNumberIN(p.price, 2)}</div>
-                  <Ret v={p.returns_abs_1year} label="1Y" />
-                  <Ret v={p.returns_cmp_3year} label="3Y" />
-                  <Ret v={p.returns_cmp_5year} label="5Y" />
-                </Link>
-              ))}
+            <div className="mt-6 overflow-x-auto rounded-2xl border border-black/[0.06] bg-white shadow-soft">
+              <div className="min-w-[760px]">
+                {peerList.map((p: any) => (
+                  <Link
+                    key={p.scheme_amfi}
+                    href={`/funds/${encodeURIComponent(p.scheme_amfi)}`}
+                    className="grid grid-cols-12 items-center gap-3 border-b border-black/5 px-6 py-4 transition-colors last:border-0 hover:bg-cloud"
+                  >
+                    <div className="col-span-6 flex items-center gap-3">
+                      <CompanyLogo company={p.scheme_company} size={32} />
+                      <div className="min-w-0 truncate text-sm font-semibold text-ink">{p.scheme_amfi_short_name || p.scheme_amfi}</div>
+                    </div>
+                    <div className="col-span-2 text-right tabular text-sm text-graphite">₹{formatNumberIN(p.price, 2)}</div>
+                    <Ret v={p.returns_abs_1year} label="1Y" />
+                    <Ret v={p.returns_cmp_3year} label="3Y" />
+                    <Ret v={p.returns_cmp_5year} label="5Y" />
+                  </Link>
+                ))}
+              </div>
             </div>
           </section>
         )}
