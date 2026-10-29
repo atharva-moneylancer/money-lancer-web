@@ -152,77 +152,79 @@ export function FundsListClient({
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-soft">
-        {/* Header */}
-        <div className="grid grid-cols-12 gap-3 border-b border-black/5 bg-cloud px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate2">
-          <div className="col-span-5">Scheme</div>
-          <div className="col-span-2 text-right">NAV</div>
-          <div
-            className={`col-span-1 text-right ${sort === "1y" ? "text-crayola" : ""}`}
-          >
-            1Y
+      <div className="overflow-x-auto rounded-2xl border border-black/[0.06] bg-white shadow-soft">
+        <div className="min-w-[760px]">
+          {/* Header */}
+          <div className="grid grid-cols-12 gap-3 border-b border-black/5 bg-cloud px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate2">
+            <div className="col-span-5">Scheme</div>
+            <div className="col-span-2 text-right">NAV</div>
+            <div
+              className={`col-span-1 text-right ${sort === "1y" ? "text-crayola" : ""}`}
+            >
+              1Y
+            </div>
+            <div
+              className={`col-span-1 text-right ${sort === "3y" ? "text-crayola" : ""}`}
+            >
+              3Y
+            </div>
+            <div
+              className={`col-span-1 text-right ${sort === "5y" ? "text-crayola" : ""}`}
+            >
+              5Y
+            </div>
+            <div
+              className={`col-span-2 text-right ${sort === "ter" ? "text-crayola" : ""}`}
+            >
+              TER
+            </div>
           </div>
-          <div
-            className={`col-span-1 text-right ${sort === "3y" ? "text-crayola" : ""}`}
-          >
-            3Y
-          </div>
-          <div
-            className={`col-span-1 text-right ${sort === "5y" ? "text-crayola" : ""}`}
-          >
-            5Y
-          </div>
-          <div
-            className={`col-span-2 text-right ${sort === "ter" ? "text-crayola" : ""}`}
-          >
-            TER
-          </div>
-        </div>
-
-        {/* Empty state */}
-        {filtered.length === 0 && (
-          <div className="px-6 py-12 text-center text-sm text-slate2">
-            No funds match "
-            <span className="font-semibold text-graphite">{query}</span>"
-          </div>
-        )}
-
-        {/* Rows */}
-        {filtered.map((r) => (
-          <Link
-            key={r.scheme_amfi}
-            href={`/funds/${encodeURIComponent(r.scheme_amfi)}`}
-            className="grid grid-cols-12 items-center gap-3 border-b border-black/5 px-6 py-5 transition-colors last:border-0 hover:bg-cloud"
-          >
-            <div className="col-span-5 flex items-center gap-3">
-              <CompanyLogo company={r.scheme_company || ""} />
-              <div className="min-w-0">
-                <div className="truncate text-sm font-semibold text-ink">
-                  {r.scheme_amfi_short_name || r.scheme_amfi}
-                </div>
-                <div className="mt-1 text-xs text-slate2">
-                  {r.scheme_company_short_name || r.scheme_company} ·{" "}
-                  {r.scheme_category}
+  
+          {/* Empty state */}
+          {filtered.length === 0 && (
+            <div className="px-6 py-12 text-center text-sm text-slate2">
+              No funds match "
+              <span className="font-semibold text-graphite">{query}</span>"
+            </div>
+          )}
+  
+          {/* Rows */}
+          {filtered.map((r) => (
+            <Link
+              key={r.scheme_amfi}
+              href={`/funds/${encodeURIComponent(r.scheme_amfi)}`}
+              className="grid grid-cols-12 items-center gap-3 border-b border-black/5 px-6 py-5 transition-colors last:border-0 hover:bg-cloud"
+            >
+              <div className="col-span-5 flex items-center gap-3">
+                <CompanyLogo company={r.scheme_company || ""} />
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-ink">
+                    {r.scheme_amfi_short_name || r.scheme_amfi}
+                  </div>
+                  <div className="mt-1 text-xs text-slate2">
+                    {r.scheme_company_short_name || r.scheme_company} ·{" "}
+                    {r.scheme_category}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="col-span-2 text-right tabular text-sm font-semibold text-graphite">
-              ₹{formatNumberIN(r.price ?? 0, 2)}
-            </div>
-            <Ret v={r.returns_abs_1year} active={sort === "1y"} />
-            <Ret v={r.returns_cmp_3year} active={sort === "3y"} />
-            <Ret v={r.returns_cmp_5year} active={sort === "5y"} />
-            <div
-              className={`col-span-2 text-right tabular text-sm ${
-                sort === "ter"
-                  ? "font-semibold text-graphite"
-                  : "text-slate1"
-              }`}
-            >
-              {r.ter ? `${r.ter.toFixed(2)}%` : "—"}
-            </div>
-          </Link>
-        ))}
+              <div className="col-span-2 text-right tabular text-sm font-semibold text-graphite">
+                ₹{formatNumberIN(r.price ?? 0, 2)}
+              </div>
+              <Ret v={r.returns_abs_1year} active={sort === "1y"} />
+              <Ret v={r.returns_cmp_3year} active={sort === "3y"} />
+              <Ret v={r.returns_cmp_5year} active={sort === "5y"} />
+              <div
+                className={`col-span-2 text-right tabular text-sm ${
+                  sort === "ter"
+                    ? "font-semibold text-graphite"
+                    : "text-slate1"
+                }`}
+              >
+                {r.ter ? `${r.ter.toFixed(2)}%` : "—"}
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Footer link — only shown for specific categories, not for "all" */}
