@@ -55,45 +55,47 @@ export default async function LiveFunds() {
           </Link>
         </div>
 
-        <div className="mt-12 overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-soft">
-          <div className="grid grid-cols-12 gap-3 border-b border-black/5 bg-cloud px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate2">
-            <div className="col-span-5">Scheme</div>
-            <div className="col-span-2 text-right">NAV</div>
-            <div className="col-span-1 text-right">1Y</div>
-            <div className="col-span-1 text-right">3Y</div>
-            <div className="col-span-1 text-right">5Y</div>
-            <div className="col-span-2 text-right">Action</div>
-          </div>
-          {rows.map((r) => (
-            <Link
-              key={r.code}
-              href={`/funds/${encodeURIComponent(r.code)}`}
-              className="grid grid-cols-12 items-center gap-3 border-b border-black/5 px-6 py-5 transition-colors last:border-0 hover:bg-cloud"
-            >
-              <div className="col-span-5 flex items-center gap-3">
-                <CompanyLogo company={r.company} />
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold text-ink">{r.name}</div>
-                  <div className="mt-1 inline-flex items-center gap-2 text-xs text-slate2">
-                    <span className="truncate">{r.company}</span>
-                    <span className="h-1 w-1 shrink-0 rounded-full bg-mist" />
-                    <span className="truncate">{r.cat}</span>
+        <div className="mt-12 overflow-x-auto rounded-2xl border border-black/[0.06] bg-white shadow-soft">
+          <div className="min-w-[760px]">
+            <div className="grid grid-cols-12 gap-3 border-b border-black/5 bg-cloud px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate2">
+              <div className="col-span-5">Scheme</div>
+              <div className="col-span-2 text-right">NAV</div>
+              <div className="col-span-1 text-right">1Y</div>
+              <div className="col-span-1 text-right">3Y</div>
+              <div className="col-span-1 text-right">5Y</div>
+              <div className="col-span-2 text-right">Action</div>
+            </div>
+            {rows.map((r) => (
+              <Link
+                key={r.code}
+                href={`/funds/${encodeURIComponent(r.code)}`}
+                className="grid grid-cols-12 items-center gap-3 border-b border-black/5 px-6 py-5 transition-colors last:border-0 hover:bg-cloud"
+              >
+                <div className="col-span-5 flex items-center gap-3">
+                  <CompanyLogo company={r.company} />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-ink">{r.name}</div>
+                    <div className="mt-1 inline-flex items-center gap-2 text-xs text-slate2">
+                      <span className="truncate">{r.company}</span>
+                      <span className="h-1 w-1 shrink-0 rounded-full bg-mist" />
+                      <span className="truncate">{r.cat}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="col-span-2 text-right tabular text-sm font-semibold text-graphite">
-                ₹{formatNumberIN(r.nav, 2)}
-              </div>
-              <ReturnCell value={r.r1y} />
-              <ReturnCell value={r.r3y} />
-              <ReturnCell value={r.r5y} />
-              <div className="col-span-2 text-right">
-                <span className="inline-flex items-center rounded-lg bg-crayola/10 px-3 py-1.5 text-xs font-semibold text-crayola">
-                  Start SIP →
-                </span>
-              </div>
-            </Link>
-          ))}
+                <div className="col-span-2 text-right tabular text-sm font-semibold text-graphite">
+                  ₹{formatNumberIN(r.nav, 2)}
+                </div>
+                <ReturnCell value={r.r1y} />
+                <ReturnCell value={r.r3y} />
+                <ReturnCell value={r.r5y} />
+                <div className="col-span-2 text-right">
+                  <span className="inline-flex items-center rounded-lg bg-crayola/10 px-3 py-1.5 text-xs font-semibold text-crayola">
+                    Start SIP →
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </Container>
     </section>
