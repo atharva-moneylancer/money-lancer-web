@@ -162,21 +162,23 @@ export default async function BucketDetailPage({
               </p>
             </div>
           ) : (
-            <div className="mt-5 overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-soft">
-              {/* Table header */}
-              <div className="grid grid-cols-12 gap-3 border-b border-black/5 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate2">
-                <div className="col-span-5">Scheme</div>
-                <div className="col-span-2 text-right">NAV</div>
-                <div className="col-span-1 text-right">1Y</div>
-                <div className="col-span-1 text-right">3Y</div>
-                <div className="col-span-1 text-right">5Y</div>
-                <div className="col-span-2 text-right">TER</div>
+            <div className="mt-5 overflow-x-auto rounded-2xl border border-black/[0.06] bg-white shadow-soft">
+              <div className="min-w-[760px]">
+                {/* Table header */}
+                <div className="grid grid-cols-12 gap-3 border-b border-black/5 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate2">
+                  <div className="col-span-5">Scheme</div>
+                  <div className="col-span-2 text-right">NAV</div>
+                  <div className="col-span-1 text-right">1Y</div>
+                  <div className="col-span-1 text-right">3Y</div>
+                  <div className="col-span-1 text-right">5Y</div>
+                  <div className="col-span-2 text-right">TER</div>
+                </div>
+  
+                {/* Fund rows */}
+                {bucket.hydratedFunds.map((f) => (
+                  <FundRow key={f.scheme_amfi} fund={f} />
+                ))}
               </div>
-
-              {/* Fund rows */}
-              {bucket.hydratedFunds.map((f) => (
-                <FundRow key={f.scheme_amfi} fund={f} />
-              ))}
             </div>
           )}
         </div>
